@@ -27,10 +27,19 @@ namespace SelfBulletting.Infrastructure.Services.Vibration
 
         public void Pulse(int milliseconds)
         {
-            using (AndroidJavaObject effect = _vibrationEffect.CallStatic<AndroidJavaObject>(
-                       "createOneShot", (long)milliseconds, DefaultAmplitude))
+            try
             {
-                _vibrator.Call("vibrate", effect);
+                using (AndroidJavaObject effect = _vibrationEffect.CallStatic<AndroidJavaObject>(
+                           "createOneShot", (long)milliseconds, DefaultAmplitude))
+                {
+                    _vibrator.Call("vibrate", effect);
+                }
+            }
+            catch (AndroidJavaException)
+            {
+                // A long buzz is better than none. This call is also what makes Unity add
+                // the VIBRATE permission to the Android manifest, which VibrationEffect needs too.
+                Handheld.Vibrate();
             }
         }
 

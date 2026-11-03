@@ -33,6 +33,7 @@ namespace SelfBulletting.Gameplay
         [SerializeField] private MonoBehaviour _aimView;
         [SerializeField] private MonoBehaviour _scoreView;
         [SerializeField] private MonoBehaviour _doorView;
+        [SerializeField] private MonoBehaviour _healthView;
 
         private BallModel _ball;
         private GameViews _views;
@@ -62,6 +63,7 @@ namespace SelfBulletting.Gameplay
             _views.Ball.Place(_level.StartPoint, _ball.WorldRadius);
             _views.Path.SetPath(_level.StartPoint, _level.FinishPoint);
             _views.Path.SetWidth(_ball.WorldRadius);
+            _views.Health.Show(_ball.RadiusPercent, economy.GetHealth(_ball.RadiusPercent));
             _ball.RadiusChanged += ShowBallSize;
         }
 
@@ -89,6 +91,7 @@ namespace SelfBulletting.Gameplay
             _aimView = KeepIfImplements<IAimView>(_aimView);
             _scoreView = KeepIfImplements<IScoreView>(_scoreView);
             _doorView = KeepIfImplements<IDoorView>(_doorView);
+            _healthView = KeepIfImplements<IBallHealthView>(_healthView);
         }
 
         private void ShowBallSize()
@@ -103,7 +106,8 @@ namespace SelfBulletting.Gameplay
             Resolve<IPathView>(_pathView) ?? new NullPathView(),
             Resolve<IAimView>(_aimView) ?? new NullAimView(),
             Resolve<IScoreView>(_scoreView) ?? new NullScoreView(),
-            Resolve<IDoorView>(_doorView) ?? new NullDoorView());
+            Resolve<IDoorView>(_doorView) ?? new NullDoorView(),
+            Resolve<IBallHealthView>(_healthView) ?? new NullBallHealthView());
 
         private static TView Resolve<TView>(MonoBehaviour component) where TView : class =>
             component != null ? component as TView : null;

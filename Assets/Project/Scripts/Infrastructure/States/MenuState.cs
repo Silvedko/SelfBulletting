@@ -31,14 +31,14 @@ namespace SelfBulletting.Infrastructure.States
 
         public async UniTask EnterAsync(CancellationToken cancellationToken)
         {
-            _curtain.Show();
+            await _curtain.ShowAsync(cancellationToken);
             await _sceneLoader.LoadAsync(SceneNames.Menu, _curtain, cancellationToken);
 
             _menu = _sceneLoader.FindEntryPoint<MenuEntryPoint>(SceneNames.Menu);
             _menu.Construct(_saveService.TotalScore);
             _menu.PlayRequested += OnPlayRequested;
 
-            _curtain.Hide();
+            await _curtain.HideAsync(cancellationToken);
         }
 
         public async UniTask ExitAsync(CancellationToken cancellationToken)
@@ -46,7 +46,7 @@ namespace SelfBulletting.Infrastructure.States
             _menu.PlayRequested -= OnPlayRequested;
             _menu = null;
 
-            _curtain.Show();
+            await _curtain.ShowAsync(cancellationToken);
             await _sceneLoader.UnloadAsync(SceneNames.Menu, cancellationToken);
         }
 

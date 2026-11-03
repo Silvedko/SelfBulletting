@@ -77,6 +77,14 @@ namespace SelfBulletting.Tests.Gameplay
             Assert.AreEqual(0.45f, shot.DamageWorldRadius, Tolerance);
         }
 
+        [TestCase(100f, 1f)]
+        [TestCase(55f, 0.5f)]
+        [TestCase(10f, 0f)]
+        public void GetHealth_GoesFromFullSizeToCriticalSize(float radiusPercent, float expectedHealth)
+        {
+            Assert.AreEqual(expectedHealth, _economy.GetHealth(radiusPercent), Tolerance);
+        }
+
         [Test]
         public void GetPreviewRadiusPercent_NeverGoesBelowCriticalSize()
         {

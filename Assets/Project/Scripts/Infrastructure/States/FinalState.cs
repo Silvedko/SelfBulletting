@@ -50,7 +50,7 @@ namespace SelfBulletting.Infrastructure.States
             _screen.MenuRequested -= OnMenuRequested;
             _screen = null;
 
-            _curtain.Show();
+            await _curtain.ShowAsync(cancellationToken);
             await _sceneLoader.UnloadAsync(SceneNames.Game, cancellationToken);
         }
 

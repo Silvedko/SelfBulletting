@@ -31,13 +31,13 @@ namespace SelfBulletting.Infrastructure.States
 
         public async UniTask EnterAsync(CancellationToken cancellationToken)
         {
-            _curtain.Show();
+            await _curtain.ShowAsync(cancellationToken);
             await _sceneLoader.LoadAsync(SceneNames.Game, _curtain, cancellationToken);
 
             GameEntryPoint game = _sceneLoader.FindEntryPoint<GameEntryPoint>(SceneNames.Game);
             game.Construct(_dependencies);
 
-            _curtain.Hide();
+            await _curtain.HideAsync(cancellationToken);
 
             _roundCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             PlayRoundAsync(game, _roundCancellation.Token).Forget();

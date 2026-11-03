@@ -21,6 +21,8 @@ namespace SelfBulletting.Gameplay
     /// </summary>
     public sealed class GameLoop
     {
+        private static readonly SoundId[] s_comboSounds = { SoundId.Combo, SoundId.ComboBig, SoundId.ComboHuge };
+
         private readonly Level _level;
         private readonly BallModel _ball;
         private readonly ShotEconomy _economy;
@@ -88,12 +90,20 @@ namespace SelfBulletting.Gameplay
             _level.TryGetObstacle(target.collider, out Obstacle directHit);
             int destroyed = await _cascade.RunAsync(target.point, shot.DamageWorldRadius, directHit, _onObstacleDestroyed, cancellationToken);
             ShowComboIfAny(target.point, _score.AddShot(destroyed));
+            ShowBallHealth();
+        }
+
+        // The HUD changes only once the shot is fully resolved, so it never pulses while the player aims.
+        private void ShowBallHealth()
+        {
+            _views.Health.Show(_ball.RadiusPercent, _economy.GetHealth(_ball.RadiusPercent));
         }
 
         private async UniTask<GameResult> FinishAsync(CancellationToken cancellationToken)
         {
             _audio.Play(SoundId.Win);
             await _winSequence.PlayAsync(_level.StartPoint, _level.FinishPoint, cancellationToken);
+            _score.AwardHealthBonus(_economy.GetRemainder(_ball.RadiusPercent));
             return GameResult.Finish(_score.Summary);
         }
 
@@ -110,8 +120,12 @@ namespace SelfBulletting.Gameplay
             }
 
             _views.Score.ShowCombo(impactPoint, shotScore.Multiplier, shotScore.ComboBonus);
-            _audio.Play(SoundId.Combo);
+            _audio.Play(GetComboSound(shotScore.ComboLevel));
         }
+
+        // The bigger the combo, the brighter the sound; tiers above the last sound reuse the brightest one.
+        private static SoundId GetComboSound(int comboLevel) =>
+            s_comboSounds[Mathf.Clamp(comboLevel - 1, 0, s_comboSounds.Length - 1)];
 
         // The sphere is swept at the height of the ball centre, so it touches the ground like the ball does.
         private Vector3 GetBallCenter() => _level.StartPoint + Vector3.up * _ball.WorldRadius;

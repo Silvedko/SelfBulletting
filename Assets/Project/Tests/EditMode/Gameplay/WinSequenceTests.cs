@@ -36,7 +36,8 @@ namespace SelfBulletting.Tests.Gameplay
         {
             var ball = new RecordingBallView();
             var door = new RecordingDoorView(ball);
-            var views = new GameViews(ball, new NullShotView(), new NullPathView(), new NullAimView(), new NullScoreView(), door);
+            var views = new GameViews(ball, new NullShotView(), new NullPathView(), new NullAimView(), new NullScoreView(), door,
+                new NullBallHealthView());
             var sequence = new WinSequence(new FinishSettings(5f, 1.5f, 0.6f, 0.25f), views, new NullAudioService());
 
             sequence.PlayAsync(Vector3.zero, new Vector3(0f, 0f, 12f), CancellationToken.None).GetAwaiter().GetResult();

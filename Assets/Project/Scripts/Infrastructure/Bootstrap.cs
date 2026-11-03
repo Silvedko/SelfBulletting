@@ -21,27 +21,30 @@ namespace SelfBulletting.Infrastructure
     {
         [SerializeField] private SettingsConfig _settings;
         [SerializeField] private LoadingCurtain _loadingCurtain;
+        [SerializeField] private SoundLibrary _soundLibrary;
 
         private AppStateMachine _stateMachine;
         private IVibrationService _vibration;
+        private IAudioService _audio;
 
         private void Awake()
         {
             Application.targetFrameRate = _settings.Application.TargetFrameRate;
+            _loadingCurtain.Construct(_settings.Loading);
 
             var sceneLoader = new SceneLoader();
             ISaveService saveService = new PlayerPrefsSaveService();
             IInputService input = new PointerInputService();
-            IAudioService audio = new NullAudioService();
+            _audio = CreateAudioService();
             _vibration = CreateVibrationService();
 
-            var gameDependencies = new GameDependencies(_settings, input, _vibration, audio);
+            var gameDependencies = new GameDependencies(_settings, input, _vibration, _audio);
 
             _stateMachine = new AppStateMachine();
             _stateMachine.Register(new LoadingState(_stateMachine, sceneLoader, _loadingCurtain, _settings.Loading));
-            _stateMachine.Register(new MenuState(_stateMachine, sceneLoader, _loadingCurtain, saveService, audio));
+            _stateMachine.Register(new MenuState(_stateMachine, sceneLoader, _loadingCurtain, saveService, _audio));
             _stateMachine.Register(new GameState(_stateMachine, sceneLoader, _loadingCurtain, gameDependencies));
-            _stateMachine.Register(new FinalState(_stateMachine, sceneLoader, _loadingCurtain, saveService, audio));
+            _stateMachine.Register(new FinalState(_stateMachine, sceneLoader, _loadingCurtain, saveService, _audio));
         }
 
         private void Start()
@@ -53,6 +56,19 @@ namespace SelfBulletting.Infrastructure
         {
             _stateMachine?.Dispose();
             (_vibration as IDisposable)?.Dispose();
+            (_audio as IDisposable)?.Dispose();
+        }
+
+        private IAudioService CreateAudioService()
+        {
+            if (_soundLibrary == null)
+            {
+                Debug.LogWarning($"{nameof(SoundLibrary)} is not assigned, the game runs without sound.", this);
+                return new NullAudioService();
+            }
+
+            // The sources go under this object, so they live in the Boot scene for the whole app.
+            return new AudioService(_soundLibrary, transform);
         }
 
         private static IVibrationService CreateVibrationService()

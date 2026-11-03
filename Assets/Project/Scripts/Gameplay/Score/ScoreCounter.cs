@@ -5,7 +5,8 @@ using UnityEngine;
 namespace SelfBulletting.Gameplay.Score
 {
     /// <summary>
-    /// Points for destroyed obstacles. A shot that destroys enough obstacles gets the multiplier of the highest tier it reaches.
+    /// Points for destroyed obstacles, with the multiplier of the highest combo tier a shot reaches,
+    /// plus a bonus at the finish for every percent of the ball that is left above the critical size.
     /// </summary>
     public sealed class ScoreCounter
     {
@@ -16,6 +17,7 @@ namespace SelfBulletting.Gameplay.Score
         private int _destroyedObstacles;
         private int _basePoints;
         private int _comboBonus;
+        private int _healthBonus;
 
         public ScoreCounter(ScoreSettings settings)
         {
@@ -23,7 +25,7 @@ namespace SelfBulletting.Gameplay.Score
         }
 
         public int PointsPerObstacle => _settings.PointsPerObstacle;
-        public ScoreSummary Summary => new ScoreSummary(_destroyedObstacles, _basePoints, _comboBonus);
+        public ScoreSummary Summary => new ScoreSummary(_destroyedObstacles, _basePoints, _comboBonus, _healthBonus);
 
         public ShotScore AddShot(int destroyedObstacles)
         {
@@ -40,7 +42,15 @@ namespace SelfBulletting.Gameplay.Score
             _basePoints += basePoints;
             _comboBonus += comboBonus;
 
-            return new ShotScore(destroyedObstacles, basePoints, comboBonus, multiplier);
+            return new ShotScore(destroyedObstacles, basePoints, comboBonus, multiplier, GetComboLevel(destroyedObstacles));
+        }
+
+        /// <param name="remainderPercent">What is left of the ball above the critical size, % of R0.</param>
+        /// <returns>The bonus. Awarded once, at the finish; a second call replaces it.</returns>
+        public int AwardHealthBonus(float remainderPercent)
+        {
+            _healthBonus = Mathf.RoundToInt(Mathf.Max(0f, remainderPercent) * _settings.PointsPerRemainingPercent);
+            return _healthBonus;
         }
 
         public float GetMultiplier(int destroyedObstacles)
@@ -58,6 +68,21 @@ namespace SelfBulletting.Gameplay.Score
             }
 
             return multiplier;
+        }
+
+        /// <summary>How many combo tiers the shot reached: 0 — none, 1 — the first one, and so on.</summary>
+        public int GetComboLevel(int destroyedObstacles)
+        {
+            int level = 0;
+            foreach (ComboTier tier in _settings.ComboTiers)
+            {
+                if (destroyedObstacles >= tier.MinObstacles)
+                {
+                    level++;
+                }
+            }
+
+            return level;
         }
     }
 }

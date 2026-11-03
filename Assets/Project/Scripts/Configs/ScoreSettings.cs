@@ -17,18 +17,25 @@ namespace SelfBulletting.Configs
             new ComboTier(10, 3f)
         };
 
+        [Tooltip("Bonus at the finish for every percent of the ball left above the critical size. " +
+                 "A shot earns about 5–26 points per percent it spends (small single hits up to big x3 combos), " +
+                 "so 30 makes every percent saved worth more than spending it on extra obstacles.")]
+        [SerializeField, Min(0)] private int _pointsPerRemainingPercent = 30;
+
         public ScoreSettings()
         {
         }
 
-        public ScoreSettings(int pointsPerObstacle, IEnumerable<ComboTier> comboTiers)
+        public ScoreSettings(int pointsPerObstacle, IEnumerable<ComboTier> comboTiers, int pointsPerRemainingPercent)
         {
             _pointsPerObstacle = pointsPerObstacle;
             _comboTiers = new List<ComboTier>(comboTiers);
+            _pointsPerRemainingPercent = pointsPerRemainingPercent;
         }
 
         public int PointsPerObstacle => _pointsPerObstacle;
         public IReadOnlyList<ComboTier> ComboTiers => _comboTiers;
+        public int PointsPerRemainingPercent => _pointsPerRemainingPercent;
 
         public void Validate()
         {

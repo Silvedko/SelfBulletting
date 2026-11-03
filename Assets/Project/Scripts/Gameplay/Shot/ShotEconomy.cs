@@ -30,6 +30,10 @@ namespace SelfBulletting.Gameplay.Shot
         /// <summary>What the ball can still spend without getting below the critical size.</summary>
         public float GetRemainder(float radiusPercent) => Mathf.Max(0f, radiusPercent - _shot.MinShootPercent);
 
+        /// <summary>The remainder as a share of the full ball: 1 at full size, 0 at the critical size.</summary>
+        public float GetHealth(float radiusPercent) =>
+            Mathf.Clamp01(GetRemainder(radiusPercent) / (FullSizePercent - _shot.MinShootPercent));
+
         public ShotMode GetShotMode(float radiusPercent)
         {
             float remainder = GetRemainder(radiusPercent);

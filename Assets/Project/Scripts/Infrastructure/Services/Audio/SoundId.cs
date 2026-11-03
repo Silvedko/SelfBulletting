@@ -13,6 +13,10 @@ namespace SelfBulletting.Infrastructure.Services.Audio
         DoorOpen,
         Hop,
         Win,
-        Lose
+        Lose,
+
+        // Appended, not inserted: SoundLibrary stores ids as numbers. Combo is the first tier, these are the higher ones.
+        ComboBig,
+        ComboHuge
     }
 }

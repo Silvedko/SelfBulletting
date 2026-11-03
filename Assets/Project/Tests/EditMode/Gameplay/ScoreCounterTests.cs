@@ -14,7 +14,7 @@ namespace SelfBulletting.Tests.Gameplay
         public void SetUp()
         {
             var tiers = new[] { new ComboTier(3, 1.5f), new ComboTier(6, 2f), new ComboTier(10, 3f) };
-            _counter = new ScoreCounter(new ScoreSettings(10, tiers));
+            _counter = new ScoreCounter(new ScoreSettings(10, tiers, pointsPerRemainingPercent: 30));
         }
 
         [Test]
@@ -63,9 +63,40 @@ namespace SelfBulletting.Tests.Gameplay
         public void GetMultiplier_UnsortedTiers_StillPicksHighestReachedTier()
         {
             var tiers = new[] { new ComboTier(10, 3f), new ComboTier(3, 1.5f), new ComboTier(6, 2f) };
-            var counter = new ScoreCounter(new ScoreSettings(10, tiers));
+            var counter = new ScoreCounter(new ScoreSettings(10, tiers, pointsPerRemainingPercent: 30));
 
             Assert.AreEqual(2f, counter.GetMultiplier(7), Tolerance);
+            Assert.AreEqual(2, counter.GetComboLevel(7));
+        }
+
+        [TestCase(2, 0)]
+        [TestCase(3, 1)]
+        [TestCase(6, 2)]
+        [TestCase(25, 3)]
+        public void AddShot_ReportsReachedComboLevel(int destroyedObstacles, int expectedLevel)
+        {
+            Assert.AreEqual(expectedLevel, _counter.AddShot(destroyedObstacles).ComboLevel);
+        }
+
+        [Test]
+        public void AwardHealthBonus_PaysForEveryRemainingPercentAndAddsToTotal()
+        {
+            _counter.AddShot(3);
+
+            int bonus = _counter.AwardHealthBonus(25f);
+
+            Assert.AreEqual(750, bonus);
+            Assert.AreEqual(750, _counter.Summary.HealthBonus);
+            Assert.AreEqual(30 + 15 + 750, _counter.Summary.Total);
+        }
+
+        [Test]
+        public void AwardHealthBonus_CalledAgain_ReplacesBonus()
+        {
+            _counter.AwardHealthBonus(25f);
+            _counter.AwardHealthBonus(0f);
+
+            Assert.AreEqual(0, _counter.Summary.HealthBonus);
         }
     }
 }

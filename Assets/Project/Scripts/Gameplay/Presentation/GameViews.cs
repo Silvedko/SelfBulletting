@@ -5,7 +5,8 @@ namespace SelfBulletting.Gameplay.Presentation
     /// </summary>
     public sealed class GameViews
     {
-        public GameViews(IBallView ball, IShotView shot, IPathView path, IAimView aim, IScoreView score, IDoorView door)
+        public GameViews(IBallView ball, IShotView shot, IPathView path, IAimView aim, IScoreView score, IDoorView door,
+            IBallHealthView health)
         {
             Ball = ball;
             Shot = shot;
@@ -13,6 +14,7 @@ namespace SelfBulletting.Gameplay.Presentation
             Aim = aim;
             Score = score;
             Door = door;
+            Health = health;
         }
 
         public IBallView Ball { get; }
@@ -21,5 +23,6 @@ namespace SelfBulletting.Gameplay.Presentation
         public IAimView Aim { get; }
         public IScoreView Score { get; }
         public IDoorView Door { get; }
+        public IBallHealthView Health { get; }
     }
 }
