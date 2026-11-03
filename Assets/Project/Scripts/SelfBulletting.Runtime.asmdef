@@ -1,0 +1,21 @@
+{
+  "name": "SelfBulletting.Runtime",
+  "rootNamespace": "SelfBulletting",
+  "references": [
+    "UniTask",
+    "UniTask.DOTween",
+    "DOTween.Modules",
+    "Unity.InputSystem",
+    "Unity.TextMeshPro",
+    "UnityEngine.UI"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

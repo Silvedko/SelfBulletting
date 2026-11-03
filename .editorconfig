@@ -1,0 +1,151 @@
+# Code style: Microsoft C# Coding Conventions + Clean Code.
+# https://learn.microsoft.com/dotnet/csharp/fundamentals/coding-style/coding-conventions
+root = true
+
+[*]
+charset = utf-8
+indent_style = space
+indent_size = 4
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.{json,asmdef,asmref,inputactions,yml,yaml}]
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false
+
+[*.cs]
+
+# Usings
+dotnet_sort_system_directives_first = true
+dotnet_separate_import_directive_groups = false
+csharp_using_directive_placement = outside_namespace:warning
+
+# Namespaces (Unity 6 compiles C# 9, so block-scoped namespaces)
+csharp_style_namespace_declarations = block_scoped:warning
+
+# Braces and new lines (Allman)
+csharp_prefer_braces = true:warning
+csharp_new_line_before_open_brace = all
+csharp_new_line_before_else = true
+csharp_new_line_before_catch = true
+csharp_new_line_before_finally = true
+csharp_new_line_before_members_in_object_initializers = true
+csharp_new_line_before_members_in_anonymous_types = true
+csharp_new_line_between_query_expression_clauses = true
+
+# Indentation and spacing
+csharp_indent_case_contents = true
+csharp_indent_switch_labels = true
+csharp_indent_labels = one_less_than_current
+csharp_space_after_cast = false
+csharp_space_after_keywords_in_control_flow_statements = true
+csharp_space_between_method_declaration_parameter_list_parentheses = false
+csharp_space_between_method_call_parameter_list_parentheses = false
+
+# Modifiers
+dotnet_style_require_accessibility_modifiers = always:warning
+dotnet_style_readonly_field = true:suggestion
+csharp_preferred_modifier_order = public,private,protected,internal,static,extern,new,virtual,abstract,sealed,override,readonly,unsafe,volatile,async:suggestion
+
+# this. and language keywords
+dotnet_style_qualification_for_field = false:suggestion
+dotnet_style_qualification_for_property = false:suggestion
+dotnet_style_qualification_for_method = false:suggestion
+dotnet_style_qualification_for_event = false:suggestion
+dotnet_style_predefined_type_for_locals_parameters_members = true:suggestion
+dotnet_style_predefined_type_for_member_access = true:suggestion
+
+# var: only when the type is obvious from the right-hand side
+csharp_style_var_for_built_in_types = false:suggestion
+csharp_style_var_when_type_is_apparent = true:suggestion
+csharp_style_var_elsewhere = false:suggestion
+
+# Expression bodies
+csharp_style_expression_bodied_methods = false:silent
+csharp_style_expression_bodied_constructors = false:silent
+csharp_style_expression_bodied_properties = true:suggestion
+csharp_style_expression_bodied_accessors = true:suggestion
+csharp_style_expression_bodied_lambdas = true:silent
+
+# Modern language features available in C# 9
+dotnet_style_object_initializer = true:suggestion
+dotnet_style_collection_initializer = true:suggestion
+dotnet_style_null_propagation = true:suggestion
+dotnet_style_coalesce_expression = true:suggestion
+csharp_style_pattern_matching_over_is_with_cast_check = true:suggestion
+csharp_style_pattern_matching_over_as_with_null_check = true:suggestion
+csharp_style_throw_expression = true:suggestion
+csharp_style_inlined_variable_declaration = true:suggestion
+
+# ---------- Naming ----------
+
+# Interfaces: IPascalCase
+dotnet_naming_rule.interfaces_prefixed_with_i.severity = warning
+dotnet_naming_rule.interfaces_prefixed_with_i.symbols = interfaces
+dotnet_naming_rule.interfaces_prefixed_with_i.style = prefix_i_pascal
+
+# Type parameters: TPascalCase
+dotnet_naming_rule.type_parameters_prefixed_with_t.severity = warning
+dotnet_naming_rule.type_parameters_prefixed_with_t.symbols = type_parameters
+dotnet_naming_rule.type_parameters_prefixed_with_t.style = prefix_t_pascal
+
+# Async methods: PascalCaseAsync
+dotnet_naming_rule.async_methods_end_with_async.severity = suggestion
+dotnet_naming_rule.async_methods_end_with_async.symbols = async_methods
+dotnet_naming_rule.async_methods_end_with_async.style = pascal_async
+
+# Constants: PascalCase
+dotnet_naming_rule.constants_pascal.severity = warning
+dotnet_naming_rule.constants_pascal.symbols = constants
+dotnet_naming_rule.constants_pascal.style = pascal
+
+# Private and internal static fields: s_camelCase
+dotnet_naming_rule.private_static_fields_s_camel.severity = warning
+dotnet_naming_rule.private_static_fields_s_camel.symbols = private_static_fields
+dotnet_naming_rule.private_static_fields_s_camel.style = prefix_s_camel
+
+# Private and internal fields: _camelCase
+dotnet_naming_rule.private_fields_underscore_camel.severity = warning
+dotnet_naming_rule.private_fields_underscore_camel.symbols = private_fields
+dotnet_naming_rule.private_fields_underscore_camel.style = prefix_underscore_camel
+
+# Parameters and locals: camelCase
+dotnet_naming_rule.parameters_and_locals_camel.severity = warning
+dotnet_naming_rule.parameters_and_locals_camel.symbols = parameters_and_locals
+dotnet_naming_rule.parameters_and_locals_camel.style = camel
+
+# Types and other members: PascalCase
+dotnet_naming_rule.types_and_members_pascal.severity = warning
+dotnet_naming_rule.types_and_members_pascal.symbols = types_and_members
+dotnet_naming_rule.types_and_members_pascal.style = pascal
+
+# Symbols
+dotnet_naming_symbols.interfaces.applicable_kinds = interface
+dotnet_naming_symbols.type_parameters.applicable_kinds = type_parameter
+dotnet_naming_symbols.async_methods.applicable_kinds = method
+dotnet_naming_symbols.async_methods.required_modifiers = async
+dotnet_naming_symbols.constants.applicable_kinds = field, local
+dotnet_naming_symbols.constants.required_modifiers = const
+dotnet_naming_symbols.private_static_fields.applicable_kinds = field
+dotnet_naming_symbols.private_static_fields.applicable_accessibilities = private, internal, private_protected
+dotnet_naming_symbols.private_static_fields.required_modifiers = static
+dotnet_naming_symbols.private_fields.applicable_kinds = field
+dotnet_naming_symbols.private_fields.applicable_accessibilities = private, internal, private_protected
+dotnet_naming_symbols.parameters_and_locals.applicable_kinds = parameter, local
+dotnet_naming_symbols.types_and_members.applicable_kinds = namespace, class, struct, enum, delegate, method, property, event, field
+
+# Styles
+dotnet_naming_style.pascal.capitalization = pascal_case
+dotnet_naming_style.camel.capitalization = camel_case
+dotnet_naming_style.prefix_i_pascal.required_prefix = I
+dotnet_naming_style.prefix_i_pascal.capitalization = pascal_case
+dotnet_naming_style.prefix_t_pascal.required_prefix = T
+dotnet_naming_style.prefix_t_pascal.capitalization = pascal_case
+dotnet_naming_style.pascal_async.required_suffix = Async
+dotnet_naming_style.pascal_async.capitalization = pascal_case
+dotnet_naming_style.prefix_s_camel.required_prefix = s_
+dotnet_naming_style.prefix_s_camel.capitalization = camel_case
+dotnet_naming_style.prefix_underscore_camel.required_prefix = _
+dotnet_naming_style.prefix_underscore_camel.capitalization = camel_case

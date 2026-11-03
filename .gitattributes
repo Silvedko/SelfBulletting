@@ -1,18 +1,11 @@
-# Unity .gitattributes Template
-# Source: https://github.com/gitattributes/gitattributes/blob/master/Unity.gitattributes
-# Last synced: 2026-02-04
-# License: MIT
-#
-# This template is maintained from the gitattributes/gitattributes repository
-# and distributed under MIT License.
+# Unity .gitattributes without Git LFS.
+# Based on https://github.com/gitattributes/gitattributes/blob/master/Unity.gitattributes (MIT).
+# LFS is intentionally not used: the prototype has almost no binary assets, and
+# GitHub ZIP downloads must open in Unity without LFS pointer files.
 
-# Define macros (only works in top-level gitattributes files)
-[attr]lfs               filter=lfs diff=lfs merge=lfs -text
+# Macros
 [attr]unity-json        eol=lf linguist-language=json
 [attr]unity-yaml        merge=unityyamlmerge eol=lf linguist-language=yaml
-
-# Optionally collapse Unity YAML files on GitHub diffs
-# [attr]unity-yaml        merge=unityyamlmerge text linguist-language=yaml linguist-generated
 
 # Unity source files
 *.cginc                 text
@@ -21,6 +14,12 @@
 *.hlsl                  text linguist-language=hlsl
 *.raytrace              text linguist-language=hlsl
 *.shader                text
+
+# Docs and config
+*.md                    text
+*.json                  text
+*.editorconfig          text
+.editorconfig           text
 
 # Unity JSON files
 *.asmdef                unity-json
@@ -50,6 +49,8 @@
 *.meta                  unity-yaml
 *.mixer                 unity-yaml
 *.overrideController    unity-yaml
+*.physicMaterial        unity-yaml
+*.physicsMaterial2D     unity-yaml
 *.playable              unity-yaml
 *.prefab                unity-yaml
 *.preset                unity-yaml
@@ -62,110 +63,37 @@
 *.terrainlayer          unity-yaml
 *.unity                 unity-yaml
 
-# "physic" for 3D but "physics" for 2D
-*.physicMaterial        unity-yaml
-*.physicsMaterial2D     unity-yaml
-
-# Exclude from GitHub stats and diffs: third-party plugins, packages lock file
+# Third-party plugins and the lock file: hide from GitHub stats and diffs
 Assets/Plugins/**           linguist-generated
 Packages/packages-lock.json linguist-generated
 
-# Unity LFS
-*.cubemap               lfs
-*.unitypackage          lfs
-
-# 3D models
-*.3dm                   lfs
-*.3ds                   lfs
-*.blend                 lfs
-*.blend1                lfs
-*.c4d                   lfs
-*.collada               lfs
-*.dae                   lfs
-*.dxf                   lfs
-*.FBX                   lfs
-*.fbx                   lfs
-*.jas                   lfs
-*.lws                   lfs
-*.lxo                   lfs
-*.ma                    lfs
-*.max                   lfs
-*.mb                    lfs
-*.obj                   lfs
-*.ply                   lfs
-*.skp                   lfs
-*.stl                   lfs
-*.ztl                   lfs
-
-# Audio
-*.aif                   lfs
-*.aiff                  lfs
-*.it                    lfs
-*.mod                   lfs
-*.mp3                   lfs
-*.ogg                   lfs
-*.s3m                   lfs
-*.wav                   lfs
-*.xm                    lfs
-
-# Video
-*.asf                   lfs
-*.avi                   lfs
-*.flv                   lfs
-*.mov                   lfs
-*.mp4                   lfs
-*.mpeg                  lfs
-*.mpg                   lfs
-*.ogv                   lfs
-*.wmv                   lfs
-
-# Images
-*.bmp                   lfs
-*.exr                   lfs
-*.gif                   lfs
-*.hdr                   lfs
-*.iff                   lfs
-*.jpeg                  lfs
-*.jpg                   lfs
-*.pict                  lfs
-*.png                   lfs
-*.psd                   lfs
-*.tga                   lfs
-*.tif                   lfs
-*.tiff                  lfs
-*.webp                  lfs
-
-# Compressed Archive
-*.7z                    lfs
-*.bz2                   lfs
-*.gz                    lfs
-*.rar                   lfs
-*.tar                   lfs
-*.zip                   lfs
-
-# Compiled Dynamic Library
-*.dll                   lfs
-*.pdb                   lfs
-*.so                    lfs
-
-# Fonts
-*.otf                   lfs
-*.ttf                   lfs
-
-# Executable/Installer
-*.apk                   lfs
-*.exe                   lfs
-
-# Documents
-*.pdf                   lfs
-
-# ETC
-*.a                     lfs
-*.reason                lfs
-*.rns                   lfs
-
-# Spine export file for Unity
-*.skel.bytes            lfs
-
-# Exceptions for .asset files such as lightning pre-baking
-LightingData.asset     binary
+# Binary files: stored as regular git objects, never diffed or merged as text
+*.png                   binary
+*.jpg                   binary
+*.jpeg                  binary
+*.psd                   binary
+*.tga                   binary
+*.tif                   binary
+*.tiff                  binary
+*.exr                   binary
+*.hdr                   binary
+*.fbx                   binary
+*.FBX                   binary
+*.obj                   binary
+*.blend                 binary
+*.wav                   binary
+*.mp3                   binary
+*.ogg                   binary
+*.aif                   binary
+*.aiff                  binary
+*.mp4                   binary
+*.mov                   binary
+*.ttf                   binary
+*.otf                   binary
+*.dll                   binary
+*.so                    binary
+*.a                     binary
+*.zip                   binary
+*.unitypackage          binary
+*.pdf                   binary
+LightingData.asset      binary

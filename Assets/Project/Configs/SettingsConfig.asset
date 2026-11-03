@@ -1,0 +1,51 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c1e69b397e66783489d57bde6231e06a, type: 3}
+  m_Name: SettingsConfig
+  m_EditorClassIdentifier: SelfBulletting.Runtime::SelfBulletting.Configs.SettingsConfig
+  _application:
+    _targetFrameRate: 60
+  _loading:
+    _minDurationSeconds: 1
+  _ball:
+    _startRadius: 1.5
+  _aim:
+    _halfPeriodSeconds: 3
+  _shot:
+    _minShootPercent: 10
+    _maxShootPercent: 40
+    _damageRadiusMinPercent: 30
+    _damageRadiusMaxPercent: 200
+    _shotRadiusPercent: 30
+    _shotSpeed: 15
+  _infection:
+    _waveSpeed: 8
+    _infectDurationSeconds: 0.15
+  _score:
+    _pointsPerObstacle: 10
+    _comboTiers:
+    - _minObstacles: 3
+      _multiplier: 1.5
+    - _minObstacles: 6
+      _multiplier: 2
+    - _minObstacles: 10
+      _multiplier: 3
+  _feedback:
+    _warningPercent: 15
+    _vibrationPulseMs: 40
+    _vibrationIntervalMaxMs: 400
+    _vibrationIntervalMinMs: 120
+  _finish:
+    _doorOpenDistance: 5
+    _hopLength: 1.5
+    _hopHeight: 0.6
+    _hopDurationSeconds: 0.25
