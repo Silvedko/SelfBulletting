@@ -12,6 +12,16 @@ namespace SelfBulletting.Configs
         [Tooltip("How long an infected obstacle glows before it explodes, seconds.")]
         [SerializeField, Min(0f)] private float _infectDurationSeconds = 0.15f;
 
+        public InfectionSettings()
+        {
+        }
+
+        public InfectionSettings(float waveSpeed, float infectDurationSeconds)
+        {
+            _waveSpeed = waveSpeed;
+            _infectDurationSeconds = infectDurationSeconds;
+        }
+
         public float WaveSpeed => _waveSpeed;
         public float InfectDurationSeconds => _infectDurationSeconds;
     }

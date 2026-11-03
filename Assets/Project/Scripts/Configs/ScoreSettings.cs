@@ -9,13 +9,23 @@ namespace SelfBulletting.Configs
     {
         [SerializeField, Min(0)] private int _pointsPerObstacle = 10;
 
-        [Tooltip("Sorted by the number of obstacles. The highest tier the shot reaches is applied.")]
+        [Tooltip("The highest tier the shot reaches is applied.")]
         [SerializeField] private List<ComboTier> _comboTiers = new List<ComboTier>
         {
             new ComboTier(3, 1.5f),
             new ComboTier(6, 2f),
             new ComboTier(10, 3f)
         };
+
+        public ScoreSettings()
+        {
+        }
+
+        public ScoreSettings(int pointsPerObstacle, IEnumerable<ComboTier> comboTiers)
+        {
+            _pointsPerObstacle = pointsPerObstacle;
+            _comboTiers = new List<ComboTier>(comboTiers);
+        }
 
         public int PointsPerObstacle => _pointsPerObstacle;
         public IReadOnlyList<ComboTier> ComboTiers => _comboTiers;

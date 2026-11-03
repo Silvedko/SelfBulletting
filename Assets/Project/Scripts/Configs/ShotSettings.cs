@@ -27,6 +27,19 @@ namespace SelfBulletting.Configs
         [Tooltip("Shot flight speed, m/s.")]
         [SerializeField, Min(0.1f)] private float _shotSpeed = 15f;
 
+        public ShotSettings()
+        {
+        }
+
+        public ShotSettings(float minShootPercent, float maxShootPercent, float damageRadiusMinPercent, float damageRadiusMaxPercent)
+        {
+            _minShootPercent = minShootPercent;
+            _maxShootPercent = maxShootPercent;
+            _damageRadiusMinPercent = damageRadiusMinPercent;
+            _damageRadiusMaxPercent = damageRadiusMaxPercent;
+            Validate();
+        }
+
         public float MinShootPercent => _minShootPercent;
         public float MaxShootPercent => _maxShootPercent;
         public float DamageRadiusMinPercent => _damageRadiusMinPercent;

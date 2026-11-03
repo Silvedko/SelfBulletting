@@ -21,15 +21,15 @@ MonoBehaviour:
   _aim:
     _halfPeriodSeconds: 3
   _shot:
-    _minShootPercent: 10
-    _maxShootPercent: 40
-    _damageRadiusMinPercent: 30
+    _minShootPercent: 3
+    _maxShootPercent: 15
+    _damageRadiusMinPercent: 50
     _damageRadiusMaxPercent: 200
-    _shotRadiusPercent: 30
+    _shotRadiusPercent: 50
     _shotSpeed: 15
   _infection:
     _waveSpeed: 8
-    _infectDurationSeconds: 0.15
+    _infectDurationSeconds: 0.25
   _score:
     _pointsPerObstacle: 10
     _comboTiers:
@@ -49,3 +49,8 @@ MonoBehaviour:
     _hopLength: 1.5
     _hopHeight: 0.6
     _hopDurationSeconds: 0.25
+  _physics:
+    _obstacleMask:
+      serializedVersion: 2
+      m_Bits: 256
+    _queryBufferSize: 256

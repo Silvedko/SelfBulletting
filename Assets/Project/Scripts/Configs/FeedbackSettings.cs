@@ -17,6 +17,18 @@ namespace SelfBulletting.Configs
         [Tooltip("Pause between pulses at the critical size.")]
         [SerializeField, Min(1)] private int _vibrationIntervalMinMs = 120;
 
+        public FeedbackSettings()
+        {
+        }
+
+        public FeedbackSettings(float warningPercent, int vibrationPulseMs, int vibrationIntervalMaxMs, int vibrationIntervalMinMs)
+        {
+            _warningPercent = warningPercent;
+            _vibrationPulseMs = vibrationPulseMs;
+            _vibrationIntervalMaxMs = vibrationIntervalMaxMs;
+            _vibrationIntervalMinMs = vibrationIntervalMinMs;
+        }
+
         public float WarningPercent => _warningPercent;
         public int VibrationPulseMs => _vibrationPulseMs;
         public int VibrationIntervalMaxMs => _vibrationIntervalMaxMs;

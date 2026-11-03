@@ -9,6 +9,15 @@ namespace SelfBulletting.Configs
         [Tooltip("Seconds for the aim scale to go from minimum to maximum (and the same back).")]
         [SerializeField, Min(0.1f)] private float _halfPeriodSeconds = 3f;
 
+        public AimSettings()
+        {
+        }
+
+        public AimSettings(float halfPeriodSeconds)
+        {
+            _halfPeriodSeconds = halfPeriodSeconds;
+        }
+
         public float HalfPeriodSeconds => _halfPeriodSeconds;
     }
 }

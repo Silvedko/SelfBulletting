@@ -240,18 +240,56 @@ while (true)
 Assets/Project/
   Configs/       SettingsConfig.asset
   Materials/
-  Prefabs/
+  Prefabs/Placeholders/   ObstaclePlaceholder (тимчасовий)
   Scenes/        Boot, Menu, Game
   Scripts/       SelfBulletting.Runtime.asmdef
     Infrastructure/  Bootstrap, StateMachine/, States/, Services/
     Configs/         SettingsConfig і його розділи
-    Gameplay/        GameEntryPoint, GameLoop, Ball/, Aim/, Shot/, Obstacles/, Path/, Finish/, Score/
-    UI/              LoadingCurtain, Menu/, Hud/, Final/, FloatingText/
-  Editor/        SelfBulletting.Editor.asmdef
+    Gameplay/        GameEntryPoint, GameLoop, GameDependencies, GameResult
+      Aim/           AimScale, AimController
+      Ball/          BallModel
+      Feedback/      DangerFeedback
+      Finish/        HopPath, WinSequence
+      Levels/        Level
+      Obstacles/     Obstacle, ObstacleCascade
+      Rules/         RoundRules
+      Scanning/      PathScanner, ObstacleScanner
+      Score/         ScoreCounter, ShotScore, ScoreSummary
+      Shot/          ShotEconomy, ShotRequest, ShotMode
+      Presentation/  інтерфейси в'юшок, Null/, Placeholders/
+    UI/              LoadingCurtain, Menu/, Final/
+  Editor/        SelfBulletting.Editor.asmdef, BootSceneOnPlay, LevelGeneration/
   Tests/EditMode/  SelfBulletting.Tests.EditMode.asmdef
 ```
 
-Простори імен повторюють папки: `SelfBulletting.Infrastructure.States`, `SelfBulletting.Gameplay.Aim` тощо.
+Простори імен повторюють папки: `SelfBulletting.Infrastructure.States`, `SelfBulletting.Gameplay.Aim` тощо. Папка з фізичними запитами називається `Scanning`, а не `Physics`: інакше простір імен `...Gameplay.Physics` перекрив би `UnityEngine.Physics`.
+
+### 10.7 Контракт відображення
+
+Геймплей не знає, як виглядає гра: він говорить з в'юшками лише через інтерфейси з `Gameplay/Presentation`. Справжні в'юшки робляться окремо, тут потрібні лише їхні реалізації.
+
+| Інтерфейс | Що показує | Де підключається |
+|---|---|---|
+| `IBallView` | Куля: розмір (поточний або прев'ю), пульсація (`SetDanger` 0..1), стрибки до фінішу | поле `_ballView` у `GameEntryPoint` |
+| `IShotView` | Куля-постріл: відділяється від кулі під час утримання, летить у точку влучання | `_shotView` |
+| `IPathView` | Рожева доріжка: ширина = діаметр кулі, пульсує разом із кулею | `_pathView` |
+| `IAimView` | Шкала в HUD (недоступна частина затемнена), кільце ураження на землі, напис «Останній постріл» | `_aimView` |
+| `IScoreView` | «+10» над кожним вибухом, «КОМБО ×N» у точці влучання | `_scoreView` |
+| `IDoorView` | Двері на фініші; геймплей сам вирішує, коли їх відчинити (5 м) | `_doorView` |
+| `IObstacleView` | Зараження (фарбування) і вибух однієї перешкоди | компонент на префабі перешкоди, поруч з `Obstacle` |
+
+- Геймплей передає точки на землі; в'юшка сама піднімає кулю на її радіус.
+- Будь-яку в'юшку можна не підключати: її замінить Null-реалізація, і раунд усе одно пройде.
+- Тимчасово підключені `PlaceholderBallView` (сфера змінює розмір і стрибає) та `DebugAimView` (текст шкали через `OnGUI`). Коли будуть справжні в'юшки, їх треба видалити.
+- Звуки (`IAudioService`) і вібрація (`IVibrationService`) викликаються з геймплею, в'юшкам їх робити не треба.
+
+### 10.8 Рівень і генератор
+
+- У сцені Game є `Level` з точками `Start` (лівий нижній кут) і `Finish` (правий верхній) та коренем `Obstacles`.
+- Перешкода — префаб з колайдером і компонентом `Obstacle` на корені, шар `Obstacle`. Маска цього шару задана в `SettingsConfig → Physics`.
+- Генератор: меню **SelfBulletting → Level → Generate Obstacles**. Налаштування (seed, область, розмір клітинки, розкид, чисті зони біля старту й фінішу, префаб) лежать в `Editor/LevelGeneration/LevelGenerationSettings.asset`; швидкий перехід до них — **Select Generation Settings**.
+- Розстановка — сітка з випадковим зсувом у кожній клітинці. Той самий seed завжди дає той самий рівень. Кожен запуск замінює попередні перешкоди і підтримує Undo, тож після генерації рівень можна доводити руками.
+- Зараз стоїть тимчасовий префаб `ObstaclePlaceholder` (зелена капсула), згенеровано 299 перешкод.
 
 ### 10.6 Стиль коду
 
@@ -282,6 +320,8 @@ Assets/Project/
 | `VibrationPulseMs` | 40 | тривалість імпульсу |
 | `VibrationIntervalMaxMs` / `MinMs` | 400 / 120 | інтервал між імпульсами |
 | `LoadingMinDuration` | 1 с | щоб заставка не блимала |
+| `Physics.ObstacleMask` | шар `Obstacle` | які колайдери вважаються перешкодами |
+| `Physics.QueryBufferSize` | 256 | розмір буферів для NonAlloc-запитів |
 
 `OnValidate` перевіряє: `MinShootPercent < MaxShootPercent < 100`, `MinShootPercent < WarningPercent`, мінімум ≤ максимуму для радіуса ураження.
 
@@ -312,4 +352,4 @@ Assets/Project/
 
 ## 14. Відкриті питання ⚠
 
-1. **Рівень:** генератор у редакторі чи готовий рівень — вирішимо пізніше.
+Відкритих питань немає. Рівень робиться генератором у редакторі (10.8).

@@ -17,6 +17,7 @@ namespace SelfBulletting.Configs
         [SerializeField] private ScoreSettings _score = new ScoreSettings();
         [SerializeField] private FeedbackSettings _feedback = new FeedbackSettings();
         [SerializeField] private FinishSettings _finish = new FinishSettings();
+        [SerializeField] private PhysicsSettings _physics = new PhysicsSettings();
 
         public ApplicationSettings Application => _application;
         public LoadingSettings Loading => _loading;
@@ -27,6 +28,7 @@ namespace SelfBulletting.Configs
         public ScoreSettings Score => _score;
         public FeedbackSettings Feedback => _feedback;
         public FinishSettings Finish => _finish;
+        public PhysicsSettings Physics => _physics;
 
         private void OnValidate()
         {

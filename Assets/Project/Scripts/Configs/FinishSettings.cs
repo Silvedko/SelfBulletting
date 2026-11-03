@@ -13,6 +13,18 @@ namespace SelfBulletting.Configs
         [SerializeField, Min(0f)] private float _hopHeight = 0.6f;
         [SerializeField, Min(0.05f)] private float _hopDurationSeconds = 0.25f;
 
+        public FinishSettings()
+        {
+        }
+
+        public FinishSettings(float doorOpenDistance, float hopLength, float hopHeight, float hopDurationSeconds)
+        {
+            _doorOpenDistance = doorOpenDistance;
+            _hopLength = hopLength;
+            _hopHeight = hopHeight;
+            _hopDurationSeconds = hopDurationSeconds;
+        }
+
         public float DoorOpenDistance => _doorOpenDistance;
         public float HopLength => _hopLength;
         public float HopHeight => _hopHeight;
