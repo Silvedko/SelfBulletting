@@ -7,6 +7,7 @@ using SelfBulletting.Gameplay;
 using SelfBulletting.Gameplay.Score;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace SelfBulletting.UI.Final
@@ -19,10 +20,17 @@ namespace SelfBulletting.UI.Final
     {
         [SerializeField] private TMP_Text _titleText;
         [SerializeField] private TMP_Text _scoreText;
-        [SerializeField] private Button _retryButton;
+
+        [Tooltip("Plays the current level: the next one after a win, the same one after a loss.")]
+        [FormerlySerializedAs("_retryButton")]
+        [SerializeField] private Button _playButton;
+
+        [SerializeField] private TMP_Text _playButtonLabel;
         [SerializeField] private Button _menuButton;
         [SerializeField] private string _winTitle = "Victory!";
         [SerializeField] private string _loseTitle = "Defeat";
+        [SerializeField] private string _nextLabel = "NEXT";
+        [SerializeField] private string _retryLabel = "RETRY";
 
         [Tooltip("{0} — destroyed obstacles, {1} — combo bonus, {2} — bonus for the ball left, {3} — total score.")]
         [SerializeField] private string _summaryFormat = "Obstacles: {0}\nCombo bonus: +{1}\nBall bonus: +{2}\nScore: {3}";
@@ -32,7 +40,7 @@ namespace SelfBulletting.UI.Final
 
         [SerializeField, Min(0f)] private float _titlePopSeconds = 0.3f;
 
-        public event Action RetryRequested;
+        public event Action PlayRequested;
         public event Action MenuRequested;
 
         public void Hide()
@@ -43,6 +51,7 @@ namespace SelfBulletting.UI.Final
         public async UniTask ShowAsync(GameResult result, CancellationToken cancellationToken)
         {
             _titleText.text = result.IsWin ? _winTitle : _loseTitle;
+            _playButtonLabel.text = result.IsWin ? _nextLabel : _retryLabel;
             SetButtonsInteractable(false);
             ShowScore(0, 0, 0, 0);
             gameObject.SetActive(true);
@@ -57,13 +66,13 @@ namespace SelfBulletting.UI.Final
 
         private void Awake()
         {
-            _retryButton.onClick.AddListener(OnRetryClicked);
+            _playButton.onClick.AddListener(OnPlayClicked);
             _menuButton.onClick.AddListener(OnMenuClicked);
         }
 
         private void OnDestroy()
         {
-            _retryButton.onClick.RemoveListener(OnRetryClicked);
+            _playButton.onClick.RemoveListener(OnPlayClicked);
             _menuButton.onClick.RemoveListener(OnMenuClicked);
         }
 
@@ -111,10 +120,10 @@ namespace SelfBulletting.UI.Final
             _scoreText.text = string.Format(CultureInfo.InvariantCulture, _summaryFormat, obstacles, comboBonus, healthBonus, total);
         }
 
-        private void OnRetryClicked()
+        private void OnPlayClicked()
         {
             SetButtonsInteractable(false);
-            RetryRequested?.Invoke();
+            PlayRequested?.Invoke();
         }
 
         private void OnMenuClicked()
@@ -125,7 +134,7 @@ namespace SelfBulletting.UI.Final
 
         private void SetButtonsInteractable(bool isInteractable)
         {
-            _retryButton.interactable = isInteractable;
+            _playButton.interactable = isInteractable;
             _menuButton.interactable = isInteractable;
         }
     }

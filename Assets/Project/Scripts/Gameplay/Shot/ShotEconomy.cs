@@ -23,7 +23,6 @@ namespace SelfBulletting.Gameplay.Shot
 
         public float CriticalPercent => _shot.MinShootPercent;
         public float ShotSpeed => _shot.ShotSpeed;
-        public float ShotWorldRadius => ToWorldRadius(_shot.ShotRadiusPercent);
 
         public float ToWorldRadius(float percent) => _startRadius * percent / FullSizePercent;
 
@@ -55,6 +54,12 @@ namespace SelfBulletting.Gameplay.Shot
         }
 
         public float GetCostPercent(float scale) => Mathf.Lerp(_shot.MinShootPercent, _shot.MaxShootPercent, scale);
+
+        /// <summary>
+        /// The shot ball starts at its own radius for the minimum shot and grows exactly by as much as the player ball shrinks.
+        /// </summary>
+        public float GetShotWorldRadius(float costPercent) =>
+            ToWorldRadius(_shot.ShotStartRadiusPercent + costPercent - _shot.MinShootPercent);
 
         public float GetDamageWorldRadius(float scale) =>
             ToWorldRadius(Mathf.Lerp(_shot.DamageRadiusMinPercent, _shot.DamageRadiusMaxPercent, scale));

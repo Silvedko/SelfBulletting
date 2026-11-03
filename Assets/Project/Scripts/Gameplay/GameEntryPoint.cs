@@ -19,12 +19,15 @@ using UnityEngine;
 namespace SelfBulletting.Gameplay
 {
     /// <summary>
-    /// Composition root of the Game scene: builds the round from the app services, the level and the views.
+    /// Composition root of the Game scene: loads the level prefab and builds the round from the app services,
+    /// the level and the views. The scene itself (camera, ground, UI, views) is shared by every level.
     /// </summary>
     public sealed class GameEntryPoint : MonoBehaviour
     {
         [SerializeField] private FinalScreen _finalScreen;
-        [SerializeField] private Level _level;
+
+        [Tooltip("The level prefab is instantiated under this object.")]
+        [SerializeField] private Transform _levelRoot;
 
         [Header("Views: optional, each must implement its interface")]
         [SerializeField] private MonoBehaviour _ballView;
@@ -34,30 +37,37 @@ namespace SelfBulletting.Gameplay
         [SerializeField] private MonoBehaviour _scoreView;
         [SerializeField] private MonoBehaviour _doorView;
         [SerializeField] private MonoBehaviour _healthView;
+        [SerializeField] private MonoBehaviour _levelView;
 
+        private Level _level;
         private BallModel _ball;
         private GameViews _views;
         private GameLoop _loop;
 
         public FinalScreen FinalScreen => _finalScreen;
 
-        public void Construct(GameDependencies dependencies)
+        public void Construct(GameDependencies dependencies, Level levelPrefab)
         {
             SettingsConfig settings = dependencies.Settings;
 
             _finalScreen.Hide();
+            _level = Instantiate(levelPrefab, _levelRoot);
             _level.Initialize();
             _views = CreateViews();
+            _views.Level.Present(_level.StartPoint, _level.FinishPoint, _level.ObstaclesRoot);
 
             var economy = new ShotEconomy(settings.Ball, settings.Shot);
             _ball = new BallModel(economy);
 
+            var pathScanner = new PathScanner(settings.Physics);
+            var targeting = new ShotTargeting(pathScanner, _level.StartPoint, _level.FinishPoint);
             var danger = new DangerFeedback(settings.Feedback, settings.Shot, dependencies.Vibration, dependencies.Audio);
-            var aim = new AimController(dependencies.Input, economy, new AimScale(settings.Aim), _ball, danger, _views, dependencies.Audio);
+            var aim = new AimController(dependencies.Input, economy, new AimScale(settings.Aim), targeting, _ball, danger,
+                _views, dependencies.Audio);
             var cascade = new ObstacleCascade(new ObstacleScanner(settings.Physics), _level, settings.Infection, dependencies.Audio);
             var winSequence = new WinSequence(settings.Finish, _views, dependencies.Audio);
 
-            _loop = new GameLoop(_level, _ball, economy, new RoundRules(economy), new PathScanner(settings.Physics),
+            _loop = new GameLoop(_level, _ball, economy, new RoundRules(economy), pathScanner,
                 aim, cascade, new ScoreCounter(settings.Score), winSequence, _views, dependencies.Audio);
 
             _views.Ball.Place(_level.StartPoint, _ball.WorldRadius);
@@ -92,6 +102,7 @@ namespace SelfBulletting.Gameplay
             _scoreView = KeepIfImplements<IScoreView>(_scoreView);
             _doorView = KeepIfImplements<IDoorView>(_doorView);
             _healthView = KeepIfImplements<IBallHealthView>(_healthView);
+            _levelView = KeepIfImplements<ILevelView>(_levelView);
         }
 
         private void ShowBallSize()
@@ -107,7 +118,8 @@ namespace SelfBulletting.Gameplay
             Resolve<IAimView>(_aimView) ?? new NullAimView(),
             Resolve<IScoreView>(_scoreView) ?? new NullScoreView(),
             Resolve<IDoorView>(_doorView) ?? new NullDoorView(),
-            Resolve<IBallHealthView>(_healthView) ?? new NullBallHealthView());
+            Resolve<IBallHealthView>(_healthView) ?? new NullBallHealthView(),
+            Resolve<ILevelView>(_levelView) ?? new NullLevelView());
 
         private static TView Resolve<TView>(MonoBehaviour component) where TView : class =>
             component != null ? component as TView : null;

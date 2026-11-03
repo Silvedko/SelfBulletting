@@ -4,7 +4,8 @@ namespace SelfBulletting.Views.Aim
 {
     /// <summary>
     /// Damage zone on the ground around the impact point: a translucent disc with an outline.
-    /// It breathes with the aim scale because its radius follows the scale every frame.
+    /// It breathes with the aim scale because its radius follows the scale every frame, and it moves with the impact point,
+    /// which shifts as the growing shot touches the obstacles at another spot.
     /// </summary>
     public sealed class DamageZoneView : MonoBehaviour
     {
@@ -29,10 +30,14 @@ namespace SelfBulletting.Views.Aim
 
         private Vector3[] _outlinePoints;
 
-        public void Show(Vector3 impactPoint)
+        public void Show()
+        {
+            gameObject.SetActive(true);
+        }
+
+        public void MoveTo(Vector3 impactPoint)
         {
             transform.position = new Vector3(impactPoint.x, _ground.position.y + _groundOffset, impactPoint.z);
-            gameObject.SetActive(true);
         }
 
         public void SetRadius(float radius)

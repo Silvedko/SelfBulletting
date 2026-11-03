@@ -101,12 +101,7 @@ dotnet_naming_rule.constants_pascal.severity = warning
 dotnet_naming_rule.constants_pascal.symbols = constants
 dotnet_naming_rule.constants_pascal.style = pascal
 
-# Private and internal static fields: s_camelCase
-dotnet_naming_rule.private_static_fields_s_camel.severity = warning
-dotnet_naming_rule.private_static_fields_s_camel.symbols = private_static_fields
-dotnet_naming_rule.private_static_fields_s_camel.style = prefix_s_camel
-
-# Private and internal fields: _camelCase
+# Private and internal fields, static included: _camelCase
 dotnet_naming_rule.private_fields_underscore_camel.severity = warning
 dotnet_naming_rule.private_fields_underscore_camel.symbols = private_fields
 dotnet_naming_rule.private_fields_underscore_camel.style = prefix_underscore_camel
@@ -128,9 +123,6 @@ dotnet_naming_symbols.async_methods.applicable_kinds = method
 dotnet_naming_symbols.async_methods.required_modifiers = async
 dotnet_naming_symbols.constants.applicable_kinds = field, local
 dotnet_naming_symbols.constants.required_modifiers = const
-dotnet_naming_symbols.private_static_fields.applicable_kinds = field
-dotnet_naming_symbols.private_static_fields.applicable_accessibilities = private, internal, private_protected
-dotnet_naming_symbols.private_static_fields.required_modifiers = static
 dotnet_naming_symbols.private_fields.applicable_kinds = field
 dotnet_naming_symbols.private_fields.applicable_accessibilities = private, internal, private_protected
 dotnet_naming_symbols.parameters_and_locals.applicable_kinds = parameter, local
@@ -145,7 +137,5 @@ dotnet_naming_style.prefix_t_pascal.required_prefix = T
 dotnet_naming_style.prefix_t_pascal.capitalization = pascal_case
 dotnet_naming_style.pascal_async.required_suffix = Async
 dotnet_naming_style.pascal_async.capitalization = pascal_case
-dotnet_naming_style.prefix_s_camel.required_prefix = s_
-dotnet_naming_style.prefix_s_camel.capitalization = camel_case
 dotnet_naming_style.prefix_underscore_camel.required_prefix = _
 dotnet_naming_style.prefix_underscore_camel.capitalization = camel_case

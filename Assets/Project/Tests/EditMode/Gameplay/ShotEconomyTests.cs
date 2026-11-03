@@ -77,6 +77,16 @@ namespace SelfBulletting.Tests.Gameplay
             Assert.AreEqual(0.45f, shot.DamageWorldRadius, Tolerance);
         }
 
+        // The minimum shot (10%) is a 20% ball; every percent the player ball loses above that adds a percent to the shot.
+        [TestCase(10f, 0.3f)]
+        [TestCase(25f, 0.525f)]
+        [TestCase(40f, 0.75f)]
+        [TestCase(3f, 0.195f)]
+        public void GetShotWorldRadius_StartsAtStartRadiusAndGrowsByHowMuchTheBallShrinks(float costPercent, float expectedRadius)
+        {
+            Assert.AreEqual(expectedRadius, _economy.GetShotWorldRadius(costPercent), Tolerance);
+        }
+
         [TestCase(100f, 1f)]
         [TestCase(55f, 0.5f)]
         [TestCase(10f, 0f)]

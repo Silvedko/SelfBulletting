@@ -16,9 +16,9 @@ namespace SelfBulletting.UI.Menu
             remove => _screen.PlayRequested -= value;
         }
 
-        public void Construct(int totalScore)
+        public void Construct(int totalScore, int levelNumber)
         {
-            _screen.Show(totalScore);
+            _screen.Show(totalScore, levelNumber);
         }
     }
 }

@@ -1,5 +1,6 @@
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using SelfBulletting.Gameplay.Levels;
 using SelfBulletting.Infrastructure.Services.Audio;
 using SelfBulletting.Infrastructure.Services.Save;
 using SelfBulletting.Infrastructure.Services.SceneLoading;
@@ -15,17 +16,19 @@ namespace SelfBulletting.Infrastructure.States
         private readonly SceneLoader _sceneLoader;
         private readonly LoadingCurtain _curtain;
         private readonly ISaveService _saveService;
+        private readonly LevelProgress _progress;
         private readonly IAudioService _audio;
 
         private MenuEntryPoint _menu;
 
         public MenuState(AppStateMachine stateMachine, SceneLoader sceneLoader, LoadingCurtain curtain,
-            ISaveService saveService, IAudioService audio)
+            ISaveService saveService, LevelProgress progress, IAudioService audio)
         {
             _stateMachine = stateMachine;
             _sceneLoader = sceneLoader;
             _curtain = curtain;
             _saveService = saveService;
+            _progress = progress;
             _audio = audio;
         }
 
@@ -35,7 +38,7 @@ namespace SelfBulletting.Infrastructure.States
             await _sceneLoader.LoadAsync(SceneNames.Menu, _curtain, cancellationToken);
 
             _menu = _sceneLoader.FindEntryPoint<MenuEntryPoint>(SceneNames.Menu);
-            _menu.Construct(_saveService.TotalScore);
+            _menu.Construct(_saveService.TotalScore, _progress.CurrentNumber);
             _menu.PlayRequested += OnPlayRequested;
 
             await _curtain.HideAsync(cancellationToken);

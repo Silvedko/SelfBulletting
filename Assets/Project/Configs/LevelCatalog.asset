@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b72bca4ea2705f842b5291d1dc6ffcf4, type: 3}
+  m_Name: LevelCatalog
+  m_EditorClassIdentifier: SelfBulletting.Runtime::SelfBulletting.Gameplay.Levels.LevelCatalog
+  _levels:
+  - {fileID: 5806597961693901915, guid: 08a331e643d16df438f1fc6cad7d76e7, type: 3}
+  - {fileID: 5420069587459770897, guid: cb9c937cd60f1564da14986b71f77c38, type: 3}

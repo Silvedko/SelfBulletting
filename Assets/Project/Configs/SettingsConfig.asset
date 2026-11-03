@@ -16,16 +16,18 @@ MonoBehaviour:
     _targetFrameRate: 60
   _loading:
     _minDurationSeconds: 1
+    _fadeInSeconds: 0.2
+    _fadeOutSeconds: 0.35
   _ball:
     _startRadius: 1.5
   _aim:
     _halfPeriodSeconds: 3
   _shot:
-    _minShootPercent: 3
-    _maxShootPercent: 15
-    _damageRadiusMinPercent: 50
+    _minShootPercent: 5
+    _maxShootPercent: 25
+    _damageRadiusMinPercent: 35
     _damageRadiusMaxPercent: 200
-    _shotRadiusPercent: 50
+    _shotStartRadiusPercent: 7
     _shotSpeed: 15
   _infection:
     _waveSpeed: 8
@@ -39,6 +41,7 @@ MonoBehaviour:
       _multiplier: 2
     - _minObstacles: 10
       _multiplier: 3
+    _pointsPerRemainingPercent: 30
   _feedback:
     _warningPercent: 15
     _vibrationPulseMs: 40

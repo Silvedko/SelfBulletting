@@ -21,8 +21,8 @@ namespace SelfBulletting.Configs
         [Tooltip("Damage radius at the maximum of the aim scale, % of R0.")]
         [SerializeField, Min(0f)] private float _damageRadiusMaxPercent = 200f;
 
-        [Tooltip("Visual radius of the shot ball, % of R0. The shot is always this size.")]
-        [SerializeField] private float _shotRadiusPercent = 30f;
+        [Tooltip("Shot ball radius at the minimum of the aim scale, % of R0. While aiming it grows by exactly as much as the player ball shrinks. Not below the minimum shot cost.")]
+        [SerializeField] private float _shotStartRadiusPercent = 20f;
 
         [Tooltip("Shot flight speed, m/s.")]
         [SerializeField, Min(0.1f)] private float _shotSpeed = 15f;
@@ -31,12 +31,14 @@ namespace SelfBulletting.Configs
         {
         }
 
-        public ShotSettings(float minShootPercent, float maxShootPercent, float damageRadiusMinPercent, float damageRadiusMaxPercent)
+        public ShotSettings(float minShootPercent, float maxShootPercent, float damageRadiusMinPercent, float damageRadiusMaxPercent,
+            float shotStartRadiusPercent)
         {
             _minShootPercent = minShootPercent;
             _maxShootPercent = maxShootPercent;
             _damageRadiusMinPercent = damageRadiusMinPercent;
             _damageRadiusMaxPercent = damageRadiusMaxPercent;
+            _shotStartRadiusPercent = shotStartRadiusPercent;
             Validate();
         }
 
@@ -44,7 +46,7 @@ namespace SelfBulletting.Configs
         public float MaxShootPercent => _maxShootPercent;
         public float DamageRadiusMinPercent => _damageRadiusMinPercent;
         public float DamageRadiusMaxPercent => _damageRadiusMaxPercent;
-        public float ShotRadiusPercent => _shotRadiusPercent;
+        public float ShotStartRadiusPercent => _shotStartRadiusPercent;
         public float ShotSpeed => _shotSpeed;
 
         public void Validate()
@@ -52,7 +54,7 @@ namespace SelfBulletting.Configs
             _minShootPercent = Mathf.Clamp(_minShootPercent, LowestPercent, HighestPercent - 1f);
             _maxShootPercent = Mathf.Clamp(_maxShootPercent, _minShootPercent + 1f, HighestPercent);
             _damageRadiusMaxPercent = Mathf.Max(_damageRadiusMinPercent, _damageRadiusMaxPercent);
-            _shotRadiusPercent = Mathf.Clamp(_shotRadiusPercent, LowestPercent, 100f);
+            _shotStartRadiusPercent = Mathf.Max(_shotStartRadiusPercent, _minShootPercent);
         }
     }
 }

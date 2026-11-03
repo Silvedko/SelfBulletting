@@ -1,6 +1,7 @@
 using System;
 using SelfBulletting.Configs;
 using SelfBulletting.Gameplay;
+using SelfBulletting.Gameplay.Levels;
 using SelfBulletting.Infrastructure.Services.Audio;
 using SelfBulletting.Infrastructure.Services.Input;
 using SelfBulletting.Infrastructure.Services.Save;
@@ -22,6 +23,7 @@ namespace SelfBulletting.Infrastructure
         [SerializeField] private SettingsConfig _settings;
         [SerializeField] private LoadingCurtain _loadingCurtain;
         [SerializeField] private SoundLibrary _soundLibrary;
+        [SerializeField] private LevelCatalog _levelCatalog;
 
         private AppStateMachine _stateMachine;
         private IVibrationService _vibration;
@@ -39,12 +41,13 @@ namespace SelfBulletting.Infrastructure
             _vibration = CreateVibrationService();
 
             var gameDependencies = new GameDependencies(_settings, input, _vibration, _audio);
+            var levelProgress = new LevelProgress(saveService, _levelCatalog.Count);
 
             _stateMachine = new AppStateMachine();
             _stateMachine.Register(new LoadingState(_stateMachine, sceneLoader, _loadingCurtain, _settings.Loading));
-            _stateMachine.Register(new MenuState(_stateMachine, sceneLoader, _loadingCurtain, saveService, _audio));
-            _stateMachine.Register(new GameState(_stateMachine, sceneLoader, _loadingCurtain, gameDependencies));
-            _stateMachine.Register(new FinalState(_stateMachine, sceneLoader, _loadingCurtain, saveService, _audio));
+            _stateMachine.Register(new MenuState(_stateMachine, sceneLoader, _loadingCurtain, saveService, levelProgress, _audio));
+            _stateMachine.Register(new GameState(_stateMachine, sceneLoader, _loadingCurtain, gameDependencies, _levelCatalog, levelProgress));
+            _stateMachine.Register(new FinalState(_stateMachine, sceneLoader, _loadingCurtain, saveService, levelProgress, _audio));
         }
 
         private void Start()

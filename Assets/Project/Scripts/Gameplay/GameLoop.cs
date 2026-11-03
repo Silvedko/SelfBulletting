@@ -21,7 +21,7 @@ namespace SelfBulletting.Gameplay
     /// </summary>
     public sealed class GameLoop
     {
-        private static readonly SoundId[] s_comboSounds = { SoundId.Combo, SoundId.ComboBig, SoundId.ComboHuge };
+        private static readonly SoundId[] _comboSounds = { SoundId.Combo, SoundId.ComboBig, SoundId.ComboHuge };
 
         private readonly Level _level;
         private readonly BallModel _ball;
@@ -71,25 +71,27 @@ namespace SelfBulletting.Gameplay
                         return GameResult.Lose(_score.Summary);
 
                     default:
-                        await PlayShotAsync(ballCenter, firstObstacle, cancellationToken);
+                        await PlayShotAsync(firstObstacle, cancellationToken);
                         break;
                 }
             }
         }
 
-        private async UniTask PlayShotAsync(Vector3 ballCenter, RaycastHit target, CancellationToken cancellationToken)
+        private async UniTask PlayShotAsync(RaycastHit blocker, CancellationToken cancellationToken)
         {
             ShotMode mode = _economy.GetShotMode(_ball.RadiusPercent);
-            ShotRequest shot = await _aim.TakeShotAsync(mode, ballCenter, target.point, cancellationToken);
+            FiredShot shot = await _aim.TakeShotAsync(mode, blocker, cancellationToken);
+            ShotTarget target = shot.Target;
 
-            _ball.Spend(shot.CostPercent);
+            _ball.Spend(shot.Request.CostPercent);
             _audio.Play(SoundId.ShotFire);
-            await _views.Shot.FlyAsync(target.point, _economy.ShotSpeed, cancellationToken);
+            await _views.Shot.FlyAsync(target.ContactCenter, _economy.ShotSpeed, cancellationToken);
             _views.Shot.Hide();
 
-            _level.TryGetObstacle(target.collider, out Obstacle directHit);
-            int destroyed = await _cascade.RunAsync(target.point, shot.DamageWorldRadius, directHit, _onObstacleDestroyed, cancellationToken);
-            ShowComboIfAny(target.point, _score.AddShot(destroyed));
+            _level.TryGetObstacle(target.Obstacle, out Obstacle directHit);
+            int destroyed = await _cascade.RunAsync(target.ImpactPoint, shot.Request.DamageWorldRadius, directHit,
+                _onObstacleDestroyed, cancellationToken);
+            ShowComboIfAny(target.ImpactPoint, _score.AddShot(destroyed));
             ShowBallHealth();
         }
 
@@ -125,7 +127,7 @@ namespace SelfBulletting.Gameplay
 
         // The bigger the combo, the brighter the sound; tiers above the last sound reuse the brightest one.
         private static SoundId GetComboSound(int comboLevel) =>
-            s_comboSounds[Mathf.Clamp(comboLevel - 1, 0, s_comboSounds.Length - 1)];
+            _comboSounds[Mathf.Clamp(comboLevel - 1, 0, _comboSounds.Length - 1)];
 
         // The sphere is swept at the height of the ball centre, so it touches the ground like the ball does.
         private Vector3 GetBallCenter() => _level.StartPoint + Vector3.up * _ball.WorldRadius;

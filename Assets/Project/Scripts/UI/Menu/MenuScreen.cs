@@ -8,14 +8,17 @@ namespace SelfBulletting.UI.Menu
     public sealed class MenuScreen : MonoBehaviour
     {
         [SerializeField] private TMP_Text _totalScoreText;
+        [SerializeField] private TMP_Text _levelText;
         [SerializeField] private Button _playButton;
         [SerializeField] private string _totalScoreFormat = "Total score: {0}";
+        [SerializeField] private string _levelFormat = "Level {0}";
 
         public event Action PlayRequested;
 
-        public void Show(int totalScore)
+        public void Show(int totalScore, int levelNumber)
         {
             _totalScoreText.text = string.Format(_totalScoreFormat, totalScore);
+            _levelText.text = string.Format(_levelFormat, levelNumber);
             _playButton.interactable = true;
         }
 

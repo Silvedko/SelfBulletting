@@ -27,10 +27,11 @@ namespace SelfBulletting.Editor.LevelGeneration
         [SerializeField, Min(0f)] private float _finishClearRadius = 3f;
 
         public GameObject ObstaclePrefab => _obstaclePrefab;
+        public int Seed => _seed;
 
         public bool HasValidPrefab => _obstaclePrefab != null && _obstaclePrefab.GetComponent<Obstacle>() != null;
 
-        public ObstacleLayoutParameters ToLayoutParameters() =>
-            new ObstacleLayoutParameters(_seed, _area, _cellSize, _jitter, _startClearRadius, _finishClearRadius);
+        public ObstacleLayoutParameters ToLayoutParameters(int seed) =>
+            new ObstacleLayoutParameters(seed, _area, _cellSize, _jitter, _startClearRadius, _finishClearRadius);
     }
 }

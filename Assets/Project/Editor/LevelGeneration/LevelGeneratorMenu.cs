@@ -1,53 +1,74 @@
-using System.Collections.Generic;
 using SelfBulletting.Gameplay.Levels;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace SelfBulletting.Editor.LevelGeneration
 {
     /// <summary>
-    /// Fills the Level of the open scene with obstacles. Every run replaces the previous obstacles and supports Undo,
-    /// so a layout can be regenerated with another seed and then tweaked by hand.
+    /// Level tools. A level is a prefab with a <see cref="Level"/> on its root; the catalog sets the play order.
+    /// Generate and Clear work on the level open in Prefab Mode (or on a Level in the open scene) and support Undo.
     /// </summary>
     internal static class LevelGeneratorMenu
     {
         private const string MenuRoot = "SelfBulletting/Level/";
         private const string SettingsPath = "Assets/Project/Editor/LevelGeneration/LevelGenerationSettings.asset";
-        private const string UndoName = "Generate Obstacles";
+        private const string CatalogPath = "Assets/Project/Configs/LevelCatalog.asset";
+        private const string LevelsFolder = "Assets/Project/Levels";
+        private const string CatalogLevelsField = "_levels";
 
-        [MenuItem(MenuRoot + "Generate Obstacles")]
-        private static void Generate()
+        private static readonly Vector3 _defaultStart = new Vector3(2f, 0f, 2f);
+        private static readonly Vector3 _defaultFinish = new Vector3(10f, 0f, 22f);
+
+        [MenuItem(MenuRoot + "Create New Level")]
+        private static void CreateLevel()
         {
-            if (!TryGetLevel(out Level level) || !TryGetSettings(out LevelGenerationSettings settings))
+            if (!TryGetSettings(out LevelGenerationSettings settings) || !TryGetCatalog(out LevelCatalog catalog))
             {
                 return;
             }
 
-            ClearObstacles(level);
+            int number = catalog.Count + 1;
+            string path = AssetDatabase.GenerateUniqueAssetPath($"{LevelsFolder}/Level_{number:00}.prefab");
 
-            List<Vector3> positions = ObstacleLayout.Generate(settings.ToLayoutParameters(), level.StartPoint, level.FinishPoint);
-            foreach (Vector3 position in positions)
+            // Built in a preview scene, so the open scene stays untouched.
+            Scene preview = EditorSceneManager.NewPreviewScene();
+            Level level = BuildEmptyLevel(System.IO.Path.GetFileNameWithoutExtension(path), catalog, preview);
+            int seed = settings.Seed + catalog.Count;
+            int obstacles = ObstacleGenerator.Fill(level, settings, seed, recordUndo: false);
+
+            GameObject prefab = PrefabUtility.SaveAsPrefabAsset(level.gameObject, path);
+            EditorSceneManager.ClosePreviewScene(preview);
+
+            AddToCatalog(catalog, prefab.GetComponent<Level>());
+            AssetDatabase.OpenAsset(prefab);
+            Debug.Log($"[{nameof(LevelGeneratorMenu)}] Created {path} with {obstacles} obstacles (seed {seed}) as level {number}.");
+        }
+
+        [MenuItem(MenuRoot + "Generate Obstacles")]
+        private static void Generate()
+        {
+            if (!TryGetEditedLevel(out Level level, out Scene scene) || !TryGetSettings(out LevelGenerationSettings settings))
             {
-                var obstacle = (GameObject)PrefabUtility.InstantiatePrefab(settings.ObstaclePrefab, level.ObstaclesRoot);
-                obstacle.transform.position = position;
-                Undo.RegisterCreatedObjectUndo(obstacle, UndoName);
+                return;
             }
 
-            EditorSceneManager.MarkSceneDirty(level.gameObject.scene);
-            Debug.Log($"[{nameof(LevelGeneratorMenu)}] Generated {positions.Count} obstacles.");
+            int obstacles = ObstacleGenerator.Fill(level, settings, settings.Seed, recordUndo: true);
+            EditorSceneManager.MarkSceneDirty(scene);
+            Debug.Log($"[{nameof(LevelGeneratorMenu)}] Generated {obstacles} obstacles (seed {settings.Seed}) in {level.name}.");
         }
 
         [MenuItem(MenuRoot + "Clear Obstacles")]
         private static void Clear()
         {
-            if (!TryGetLevel(out Level level))
+            if (!TryGetEditedLevel(out Level level, out Scene scene))
             {
                 return;
             }
 
-            ClearObstacles(level);
-            EditorSceneManager.MarkSceneDirty(level.gameObject.scene);
+            ObstacleGenerator.Clear(level, recordUndo: true);
+            EditorSceneManager.MarkSceneDirty(scene);
         }
 
         [MenuItem(MenuRoot + "Select Generation Settings")]
@@ -59,24 +80,69 @@ namespace SelfBulletting.Editor.LevelGeneration
             }
         }
 
-        private static void ClearObstacles(Level level)
+        [MenuItem(MenuRoot + "Select Level Catalog")]
+        private static void SelectCatalog()
         {
-            Transform root = level.ObstaclesRoot;
-            for (int i = root.childCount - 1; i >= 0; i--)
+            if (TryGetCatalog(out LevelCatalog catalog))
             {
-                Undo.DestroyObjectImmediate(root.GetChild(i).gameObject);
+                Selection.activeObject = catalog;
             }
         }
 
-        private static bool TryGetLevel(out Level level)
+        // New levels copy the start and finish of the first level, so every level fits the same camera and ground.
+        private static Level BuildEmptyLevel(string name, LevelCatalog catalog, Scene scene)
         {
+            Vector3 start = catalog.Count > 0 ? catalog.Get(0).StartPoint : _defaultStart;
+            Vector3 finish = catalog.Count > 0 ? catalog.Get(0).FinishPoint : _defaultFinish;
+
+            var root = new GameObject(name);
+            SceneManager.MoveGameObjectToScene(root, scene);
+            Level level = root.AddComponent<Level>();
+
+            var serialized = new SerializedObject(level);
+            serialized.FindProperty("_start").objectReferenceValue = CreateChild(root.transform, "Start", start);
+            serialized.FindProperty("_finish").objectReferenceValue = CreateChild(root.transform, "Finish", finish);
+            serialized.FindProperty("_obstaclesRoot").objectReferenceValue = CreateChild(root.transform, "Obstacles", Vector3.zero);
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            return level;
+        }
+
+        private static Transform CreateChild(Transform parent, string name, Vector3 position)
+        {
+            Transform child = new GameObject(name).transform;
+            child.SetParent(parent, false);
+            child.position = position;
+            return child;
+        }
+
+        private static void AddToCatalog(LevelCatalog catalog, Level level)
+        {
+            var serialized = new SerializedObject(catalog);
+            SerializedProperty levels = serialized.FindProperty(CatalogLevelsField);
+            levels.arraySize++;
+            levels.GetArrayElementAtIndex(levels.arraySize - 1).objectReferenceValue = level;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(catalog);
+            AssetDatabase.SaveAssets();
+        }
+
+        private static bool TryGetEditedLevel(out Level level, out Scene scene)
+        {
+            PrefabStage stage = PrefabStageUtility.GetCurrentPrefabStage();
+            if (stage != null && stage.prefabContentsRoot.TryGetComponent(out level))
+            {
+                scene = stage.scene;
+                return true;
+            }
+
             level = Object.FindAnyObjectByType<Level>();
+            scene = level != null ? level.gameObject.scene : default;
             if (level != null && level.ObstaclesRoot != null)
             {
                 return true;
             }
 
-            Debug.LogError($"[{nameof(LevelGeneratorMenu)}] Open the Game scene: it needs a Level with an obstacles root.");
+            Debug.LogError($"[{nameof(LevelGeneratorMenu)}] Open a level prefab from {LevelsFolder} in Prefab Mode first.");
             return false;
         }
 
@@ -89,6 +155,18 @@ namespace SelfBulletting.Editor.LevelGeneration
             }
 
             Debug.LogError($"[{nameof(LevelGeneratorMenu)}] {SettingsPath} is missing or has no obstacle prefab with an Obstacle component.");
+            return false;
+        }
+
+        private static bool TryGetCatalog(out LevelCatalog catalog)
+        {
+            catalog = AssetDatabase.LoadAssetAtPath<LevelCatalog>(CatalogPath);
+            if (catalog != null)
+            {
+                return true;
+            }
+
+            Debug.LogError($"[{nameof(LevelGeneratorMenu)}] {CatalogPath} is missing.");
             return false;
         }
     }
