@@ -8,6 +8,7 @@ namespace SelfBulletting.Gameplay.Presentation
     /// </summary>
     public interface ILevelView
     {
-        void Present(Vector3 startGroundPoint, Vector3 finishGroundPoint, Transform obstaclesRoot);
+        /// <param name="finishDirection">Flat direction in which the path reaches the finish: the door faces against it.</param>
+        void Present(Vector3 startGroundPoint, Vector3 finishGroundPoint, Vector3 finishDirection, Transform obstaclesRoot);
     }
 }

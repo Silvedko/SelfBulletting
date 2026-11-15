@@ -14,4 +14,3 @@ MonoBehaviour:
   m_EditorClassIdentifier: SelfBulletting.Runtime::SelfBulletting.Gameplay.Levels.LevelCatalog
   _levels:
   - {fileID: 5806597961693901915, guid: 08a331e643d16df438f1fc6cad7d76e7, type: 3}
-  - {fileID: 5420069587459770897, guid: cb9c937cd60f1564da14986b71f77c38, type: 3}

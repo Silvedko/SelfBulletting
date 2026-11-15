@@ -1,3 +1,4 @@
+using UnityEngine;
 using UnityEngine.InputSystem;
 
 namespace SelfBulletting.Infrastructure.Services.Input
@@ -10,5 +11,6 @@ namespace SelfBulletting.Infrastructure.Services.Input
         public bool IsPressed => Pointer.current != null && Pointer.current.press.isPressed;
         public bool WasPressedThisFrame => Pointer.current != null && Pointer.current.press.wasPressedThisFrame;
         public bool WasReleasedThisFrame => Pointer.current != null && Pointer.current.press.wasReleasedThisFrame;
+        public Vector2 Position => Pointer.current != null ? Pointer.current.position.ReadValue() : Vector2.zero;
     }
 }

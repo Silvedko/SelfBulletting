@@ -9,6 +9,10 @@ namespace SelfBulletting.Gameplay.Presentation.Null
         {
         }
 
+        public void SetHighlighted(bool isHighlighted)
+        {
+        }
+
         public UniTask PlayExplosionAsync(CancellationToken cancellationToken) => UniTask.CompletedTask;
     }
 }

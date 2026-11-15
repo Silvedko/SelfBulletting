@@ -1,13 +1,15 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace SelfBulletting.Gameplay.Presentation
 {
     /// <summary>
-    /// The pink strip on the ground from the ball to the finish. Its width is the ball diameter.
+    /// The strip on the ground from the ball to the finish. It follows the path points and is as wide as the ball diameter.
     /// </summary>
     public interface IPathView
     {
-        void SetPath(Vector3 fromGroundPoint, Vector3 toGroundPoint);
+        /// <param name="groundPoints">The path as a polyline, from the ball to the finish: two points for a straight path.</param>
+        void SetPath(IReadOnlyList<Vector3> groundPoints);
 
         /// <summary>Ball radius (current or preview); the strip is twice as wide.</summary>
         void SetWidth(float ballWorldRadius);

@@ -1,41 +1,54 @@
 using System;
-using TMPro;
+using SelfBulletting.Gameplay.Modes;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace SelfBulletting.UI.Menu
 {
+    /// <summary>
+    /// A button for every game mode; each shows the level and the total score of its mode.
+    /// </summary>
     public sealed class MenuScreen : MonoBehaviour
     {
-        [SerializeField] private TMP_Text _totalScoreText;
-        [SerializeField] private TMP_Text _levelText;
-        [SerializeField] private Button _playButton;
-        [SerializeField] private string _totalScoreFormat = "Total score: {0}";
-        [SerializeField] private string _levelFormat = "Level {0}";
+        [SerializeField] private ModeButton[] _modeButtons;
 
-        public event Action PlayRequested;
+        public event Action<GameMode> PlayRequested;
 
-        public void Show(int totalScore, int levelNumber)
+        public void Show(GameMode mode, int totalScore, int levelNumber)
         {
-            _totalScoreText.text = string.Format(_totalScoreFormat, totalScore);
-            _levelText.text = string.Format(_levelFormat, levelNumber);
-            _playButton.interactable = true;
+            foreach (ModeButton button in _modeButtons)
+            {
+                if (button.Mode == mode)
+                {
+                    button.Show(levelNumber, totalScore);
+                    button.SetInteractable(true);
+                }
+            }
         }
 
         private void Awake()
         {
-            _playButton.onClick.AddListener(OnPlayClicked);
+            foreach (ModeButton button in _modeButtons)
+            {
+                button.Clicked += OnModeClicked;
+            }
         }
 
         private void OnDestroy()
         {
-            _playButton.onClick.RemoveListener(OnPlayClicked);
+            foreach (ModeButton button in _modeButtons)
+            {
+                button.Clicked -= OnModeClicked;
+            }
         }
 
-        private void OnPlayClicked()
+        private void OnModeClicked(GameMode mode)
         {
-            _playButton.interactable = false;
-            PlayRequested?.Invoke();
+            foreach (ModeButton button in _modeButtons)
+            {
+                button.SetInteractable(false);
+            }
+
+            PlayRequested?.Invoke(mode);
         }
     }
 }

@@ -1,7 +1,6 @@
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using SelfBulletting.Gameplay.Ball;
-using SelfBulletting.Gameplay.Feedback;
 using SelfBulletting.Gameplay.Presentation;
 using SelfBulletting.Gameplay.Shot;
 using SelfBulletting.Infrastructure.Services.Audio;
@@ -11,46 +10,45 @@ using UnityEngine;
 namespace SelfBulletting.Gameplay.Aim
 {
     /// <summary>
-    /// Turns the player's tap into a shot. While the finger is down the ping-pong scale sets the charge: the ball shrinks,
-    /// the shot grows by the same amount, and every frame the touch point and the damage ring are found again for the new
-    /// shot size.
+    /// Classic mode: turns the player's tap into a shot that rolls along the path. While the finger is down the
+    /// ping-pong scale sets the charge: the ball shrinks, the shot grows by the same amount, and every frame the touch
+    /// point and the damage ring are found again for the new shot size.
     /// </summary>
-    public sealed class AimController
+    public sealed class ClassicAimController : IShotAiming
     {
         private readonly IInputService _input;
         private readonly ShotEconomy _economy;
         private readonly AimScale _scale;
         private readonly ShotTargeting _targeting;
         private readonly BallModel _ball;
-        private readonly DangerFeedback _danger;
+        private readonly ChargePreview _charge;
         private readonly GameViews _views;
         private readonly IAudioService _audio;
 
-        public AimController(IInputService input, ShotEconomy economy, AimScale scale, ShotTargeting targeting,
-            BallModel ball, DangerFeedback danger, GameViews views, IAudioService audio)
+        public ClassicAimController(IInputService input, ShotEconomy economy, AimScale scale, ShotTargeting targeting,
+            BallModel ball, ChargePreview charge, GameViews views, IAudioService audio)
         {
             _input = input;
             _economy = economy;
             _scale = scale;
             _targeting = targeting;
             _ball = ball;
-            _danger = danger;
+            _charge = charge;
             _views = views;
             _audio = audio;
         }
 
-        /// <param name="blocker">The first obstacle in the ball's corridor: the shot rolls towards it.</param>
         public async UniTask<FiredShot> TakeShotAsync(ShotMode mode, RaycastHit blocker, CancellationToken cancellationToken)
         {
             bool isInstant = mode == ShotMode.Instant;
-            _views.Aim.SetLastShotHint(isInstant);
+            _views.Aim.SetLastShotHint(isInstant, isAimed: false);
             if (isInstant)
             {
                 _audio.Play(SoundId.LastShot);
             }
 
             await UniTask.WaitUntil(() => _input.WasPressedThisFrame, cancellationToken: cancellationToken);
-            _views.Aim.SetLastShotHint(false);
+            _views.Aim.SetLastShotHint(false, isAimed: false);
 
             if (isInstant)
             {
@@ -65,7 +63,8 @@ namespace SelfBulletting.Gameplay.Aim
             float limit = _economy.GetScaleLimit(_ball.RadiusPercent);
             float elapsedSeconds = 0f;
 
-            _views.Aim.Show();
+            _views.Aim.ShowScale();
+            _views.Aim.SetDamageZoneVisible(true);
             _audio.StartLoop(SoundId.AimCharge);
             FiredShot shot = ShowPreview(0f, limit, blocker);
 
@@ -81,9 +80,7 @@ namespace SelfBulletting.Gameplay.Aim
             finally
             {
                 _audio.StopLoop(SoundId.AimCharge);
-                _danger.Reset();
-                _views.Ball.SetDanger(0f);
-                _views.Path.SetDanger(0f);
+                _charge.Reset();
                 _views.Aim.Hide();
             }
 
@@ -93,14 +90,7 @@ namespace SelfBulletting.Gameplay.Aim
         private FiredShot ShowPreview(float scale, float limit, RaycastHit blocker)
         {
             ShotRequest request = _economy.CreateAimedShot(_ball.RadiusPercent, scale);
-            float previewPercent = _ball.RadiusPercent - request.CostPercent;
-            float previewWorldRadius = _economy.ToWorldRadius(previewPercent);
-            float danger = _danger.Tick(previewPercent, Time.deltaTime);
-
-            _views.Ball.SetRadius(previewWorldRadius);
-            _views.Ball.SetDanger(danger);
-            _views.Path.SetWidth(previewWorldRadius);
-            _views.Path.SetDanger(danger);
+            _charge.Show(request);
 
             FiredShot shot = Charge(request, blocker);
             _views.Aim.SetScale(request.Scale, limit);

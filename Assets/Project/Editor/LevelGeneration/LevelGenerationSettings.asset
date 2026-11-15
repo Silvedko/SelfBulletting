@@ -24,3 +24,7 @@ MonoBehaviour:
   _jitter: 0.3
   _startClearRadius: 2.5
   _finishClearRadius: 3
+  _bendCount: 2
+  _bendOffsetMin: 2.5
+  _bendOffsetMax: 4.5
+  _pathMargin: 2

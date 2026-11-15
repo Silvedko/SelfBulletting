@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using SelfBulletting.Gameplay.Levels;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -7,43 +8,42 @@ using UnityEngine.SceneManagement;
 namespace SelfBulletting.Editor.LevelGeneration
 {
     /// <summary>
-    /// Level tools. A level is a prefab with a <see cref="Level"/> on its root; the catalog sets the play order.
-    /// Generate and Clear work on the level open in Prefab Mode (or on a Level in the open scene) and support Undo.
+    /// Level tools. A level is a prefab with a <see cref="Level"/> on its root; the catalogs set the play order:
+    /// one for Classic, one with the curved levels of the aim modes. Generate and Clear work on the level open in
+    /// Prefab Mode (or on a Level in the open scene) and support Undo.
     /// </summary>
     internal static class LevelGeneratorMenu
     {
         private const string MenuRoot = "SelfBulletting/Level/";
         private const string SettingsPath = "Assets/Project/Editor/LevelGeneration/LevelGenerationSettings.asset";
         private const string CatalogPath = "Assets/Project/Configs/LevelCatalog.asset";
+        private const string CurvedCatalogPath = "Assets/Project/Configs/CurvedLevelCatalog.asset";
         private const string LevelsFolder = "Assets/Project/Levels";
         private const string CatalogLevelsField = "_levels";
 
+        // Curved levels take their seeds from another range, so they never repeat a Classic layout.
+        private const int CurvedSeedOffset = 100;
+
         private static readonly Vector3 _defaultStart = new Vector3(2f, 0f, 2f);
         private static readonly Vector3 _defaultFinish = new Vector3(10f, 0f, 22f);
+        private static readonly Regex _levelNumber = new Regex(@"^Level_(\d+)$");
 
         [MenuItem(MenuRoot + "Create New Level")]
         private static void CreateLevel()
         {
-            if (!TryGetSettings(out LevelGenerationSettings settings) || !TryGetCatalog(out LevelCatalog catalog))
+            if (TryGetSettings(out LevelGenerationSettings settings) && TryGetCatalog(CatalogPath, out LevelCatalog catalog))
             {
-                return;
+                CreateLevel(settings, catalog, settings.Seed + catalog.Count, isCurved: false);
             }
+        }
 
-            int number = catalog.Count + 1;
-            string path = AssetDatabase.GenerateUniqueAssetPath($"{LevelsFolder}/Level_{number:00}.prefab");
-
-            // Built in a preview scene, so the open scene stays untouched.
-            Scene preview = EditorSceneManager.NewPreviewScene();
-            Level level = BuildEmptyLevel(System.IO.Path.GetFileNameWithoutExtension(path), catalog, preview);
-            int seed = settings.Seed + catalog.Count;
-            int obstacles = ObstacleGenerator.Fill(level, settings, seed, recordUndo: false);
-
-            GameObject prefab = PrefabUtility.SaveAsPrefabAsset(level.gameObject, path);
-            EditorSceneManager.ClosePreviewScene(preview);
-
-            AddToCatalog(catalog, prefab.GetComponent<Level>());
-            AssetDatabase.OpenAsset(prefab);
-            Debug.Log($"[{nameof(LevelGeneratorMenu)}] Created {path} with {obstacles} obstacles (seed {seed}) as level {number}.");
+        [MenuItem(MenuRoot + "Create New Curved Level")]
+        private static void CreateCurvedLevel()
+        {
+            if (TryGetSettings(out LevelGenerationSettings settings) && TryGetCatalog(CurvedCatalogPath, out LevelCatalog catalog))
+            {
+                CreateLevel(settings, catalog, settings.Seed + CurvedSeedOffset + catalog.Count, isCurved: true);
+            }
         }
 
         [MenuItem(MenuRoot + "Generate Obstacles")]
@@ -57,6 +57,19 @@ namespace SelfBulletting.Editor.LevelGeneration
             int obstacles = ObstacleGenerator.Fill(level, settings, settings.Seed, recordUndo: true);
             EditorSceneManager.MarkSceneDirty(scene);
             Debug.Log($"[{nameof(LevelGeneratorMenu)}] Generated {obstacles} obstacles (seed {settings.Seed}) in {level.name}.");
+        }
+
+        [MenuItem(MenuRoot + "Generate Path")]
+        private static void GeneratePath()
+        {
+            if (!TryGetEditedLevel(out Level level, out Scene scene) || !TryGetSettings(out LevelGenerationSettings settings))
+            {
+                return;
+            }
+
+            int waypoints = PathGenerator.Fill(level, settings.ToPathParameters(settings.Seed, settings.BendCount), recordUndo: true);
+            EditorSceneManager.MarkSceneDirty(scene);
+            Debug.Log($"[{nameof(LevelGeneratorMenu)}] Generated a path through {waypoints} waypoints (seed {settings.Seed}) in {level.name}.");
         }
 
         [MenuItem(MenuRoot + "Clear Obstacles")]
@@ -83,13 +96,62 @@ namespace SelfBulletting.Editor.LevelGeneration
         [MenuItem(MenuRoot + "Select Level Catalog")]
         private static void SelectCatalog()
         {
-            if (TryGetCatalog(out LevelCatalog catalog))
+            if (TryGetCatalog(CatalogPath, out LevelCatalog catalog))
             {
                 Selection.activeObject = catalog;
             }
         }
 
-        // New levels copy the start and finish of the first level, so every level fits the same camera and ground.
+        [MenuItem(MenuRoot + "Select Curved Level Catalog")]
+        private static void SelectCurvedCatalog()
+        {
+            if (TryGetCatalog(CurvedCatalogPath, out LevelCatalog catalog))
+            {
+                Selection.activeObject = catalog;
+            }
+        }
+
+        private static void CreateLevel(LevelGenerationSettings settings, LevelCatalog catalog, int seed, bool isCurved)
+        {
+            int number = GetNextLevelNumber();
+            string path = AssetDatabase.GenerateUniqueAssetPath($"{LevelsFolder}/Level_{number:00}.prefab");
+
+            // Built in a preview scene, so the open scene stays untouched.
+            Scene preview = EditorSceneManager.NewPreviewScene();
+            Level level = BuildEmptyLevel(System.IO.Path.GetFileNameWithoutExtension(path), catalog, preview);
+            int obstacles = ObstacleGenerator.Fill(level, settings, seed, recordUndo: false);
+            int waypoints = isCurved
+                ? PathGenerator.Fill(level, settings.ToPathParameters(seed, settings.BendCount), recordUndo: false)
+                : 0;
+
+            GameObject prefab = PrefabUtility.SaveAsPrefabAsset(level.gameObject, path);
+            EditorSceneManager.ClosePreviewScene(preview);
+
+            AddToCatalog(catalog, prefab.GetComponent<Level>());
+            AssetDatabase.OpenAsset(prefab);
+            Debug.Log($"[{nameof(LevelGeneratorMenu)}] Created {path} with {obstacles} obstacles and {waypoints} waypoints " +
+                $"(seed {seed}) as level {catalog.Count} of {catalog.name}.");
+        }
+
+        // Classic and curved levels live in one folder, so a new level takes the number after the highest one there.
+        private static int GetNextLevelNumber()
+        {
+            int highest = 0;
+            foreach (string guid in AssetDatabase.FindAssets("t:Prefab", new[] { LevelsFolder }))
+            {
+                string name = System.IO.Path.GetFileNameWithoutExtension(AssetDatabase.GUIDToAssetPath(guid));
+                Match match = _levelNumber.Match(name);
+                if (match.Success)
+                {
+                    highest = Mathf.Max(highest, int.Parse(match.Groups[1].Value));
+                }
+            }
+
+            return highest + 1;
+        }
+
+        // New levels copy the start and finish of the first level of their catalog, so every level fits the same
+        // camera and ground.
         private static Level BuildEmptyLevel(string name, LevelCatalog catalog, Scene scene)
         {
             Vector3 start = catalog.Count > 0 ? catalog.Get(0).StartPoint : _defaultStart;
@@ -158,15 +220,15 @@ namespace SelfBulletting.Editor.LevelGeneration
             return false;
         }
 
-        private static bool TryGetCatalog(out LevelCatalog catalog)
+        private static bool TryGetCatalog(string path, out LevelCatalog catalog)
         {
-            catalog = AssetDatabase.LoadAssetAtPath<LevelCatalog>(CatalogPath);
+            catalog = AssetDatabase.LoadAssetAtPath<LevelCatalog>(path);
             if (catalog != null)
             {
                 return true;
             }
 
-            Debug.LogError($"[{nameof(LevelGeneratorMenu)}] {CatalogPath} is missing.");
+            Debug.LogError($"[{nameof(LevelGeneratorMenu)}] {path} is missing.");
             return false;
         }
     }

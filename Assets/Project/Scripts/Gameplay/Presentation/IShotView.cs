@@ -1,5 +1,6 @@
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using SelfBulletting.Gameplay.Shot;
 using UnityEngine;
 
 namespace SelfBulletting.Gameplay.Presentation
@@ -15,8 +16,11 @@ namespace SelfBulletting.Gameplay.Presentation
         /// </summary>
         void ShowCharging(Vector3 launchCenter, float shotRadius);
 
-        /// <summary>Rolls the shot straight along the path to where it touches the obstacle.</summary>
+        /// <summary>Classic: rolls the shot straight along the path to where it touches the obstacle.</summary>
         UniTask FlyAsync(Vector3 contactCenter, float speed, CancellationToken cancellationToken);
+
+        /// <summary>Aim modes: lobs the shot along the arc over the obstacles; <paramref name="speed"/> is horizontal.</summary>
+        UniTask LobAsync(ArcPath arc, float speed, CancellationToken cancellationToken);
 
         void Hide();
     }

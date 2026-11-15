@@ -13,6 +13,9 @@ namespace SelfBulletting.Configs
         [SerializeField] private BallSettings _ball = new BallSettings();
         [SerializeField] private AimSettings _aim = new AimSettings();
         [SerializeField] private ShotSettings _shot = new ShotSettings();
+        [SerializeField] private LobSettings _lob = new LobSettings();
+        [SerializeField] private SlingshotSettings _slingshot = new SlingshotSettings();
+        [SerializeField] private ArrowSettings _arrow = new ArrowSettings();
         [SerializeField] private InfectionSettings _infection = new InfectionSettings();
         [SerializeField] private ScoreSettings _score = new ScoreSettings();
         [SerializeField] private FeedbackSettings _feedback = new FeedbackSettings();
@@ -24,6 +27,9 @@ namespace SelfBulletting.Configs
         public BallSettings Ball => _ball;
         public AimSettings Aim => _aim;
         public ShotSettings Shot => _shot;
+        public LobSettings Lob => _lob;
+        public SlingshotSettings Slingshot => _slingshot;
+        public ArrowSettings Arrow => _arrow;
         public InfectionSettings Infection => _infection;
         public ScoreSettings Score => _score;
         public FeedbackSettings Feedback => _feedback;
@@ -33,6 +39,8 @@ namespace SelfBulletting.Configs
         private void OnValidate()
         {
             _shot.Validate();
+            _lob.Validate();
+            _slingshot.Validate();
             _score.Validate();
             _feedback.Validate(_shot.MinShootPercent);
         }

@@ -23,6 +23,11 @@ namespace SelfBulletting.Gameplay.Obstacles
             _view.ShowInfected();
         }
 
+        public void SetHighlighted(bool isHighlighted)
+        {
+            _view.SetHighlighted(isHighlighted);
+        }
+
         public async UniTask ExplodeAsync(CancellationToken cancellationToken)
         {
             IsDestroyed = true;

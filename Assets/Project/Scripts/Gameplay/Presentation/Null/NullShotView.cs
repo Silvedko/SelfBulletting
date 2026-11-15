@@ -1,5 +1,6 @@
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using SelfBulletting.Gameplay.Shot;
 using UnityEngine;
 
 namespace SelfBulletting.Gameplay.Presentation.Null
@@ -11,6 +12,8 @@ namespace SelfBulletting.Gameplay.Presentation.Null
         }
 
         public UniTask FlyAsync(Vector3 contactCenter, float speed, CancellationToken cancellationToken) => UniTask.CompletedTask;
+
+        public UniTask LobAsync(ArcPath arc, float speed, CancellationToken cancellationToken) => UniTask.CompletedTask;
 
         public void Hide()
         {

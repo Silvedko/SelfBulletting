@@ -6,6 +6,7 @@ using SelfBulletting.Gameplay.Ball;
 using SelfBulletting.Gameplay.Finish;
 using SelfBulletting.Gameplay.Levels;
 using SelfBulletting.Gameplay.Obstacles;
+using SelfBulletting.Gameplay.Paths;
 using SelfBulletting.Gameplay.Presentation;
 using SelfBulletting.Gameplay.Rules;
 using SelfBulletting.Gameplay.Scanning;
@@ -18,17 +19,19 @@ namespace SelfBulletting.Gameplay
 {
     /// <summary>
     /// One round as a linear async loop: check the path → aim → shoot → infection wave → check again.
+    /// The path is straight in Classic and curved in the aim modes; the aiming decides how the shot flies.
     /// </summary>
     public sealed class GameLoop
     {
         private static readonly SoundId[] _comboSounds = { SoundId.Combo, SoundId.ComboBig, SoundId.ComboHuge };
 
         private readonly Level _level;
+        private readonly GroundPath _path;
         private readonly BallModel _ball;
         private readonly ShotEconomy _economy;
         private readonly RoundRules _rules;
         private readonly PathScanner _pathScanner;
-        private readonly AimController _aim;
+        private readonly IShotAiming _aim;
         private readonly ObstacleCascade _cascade;
         private readonly ScoreCounter _score;
         private readonly WinSequence _winSequence;
@@ -36,11 +39,12 @@ namespace SelfBulletting.Gameplay
         private readonly IAudioService _audio;
         private readonly Action<Obstacle> _onObstacleDestroyed;
 
-        public GameLoop(Level level, BallModel ball, ShotEconomy economy, RoundRules rules, PathScanner pathScanner,
-            AimController aim, ObstacleCascade cascade, ScoreCounter score, WinSequence winSequence, GameViews views,
+        public GameLoop(Level level, GroundPath path, BallModel ball, ShotEconomy economy, RoundRules rules,
+            PathScanner pathScanner, IShotAiming aim, ObstacleCascade cascade, ScoreCounter score, WinSequence winSequence, GameViews views,
             IAudioService audio)
         {
             _level = level;
+            _path = path;
             _ball = ball;
             _economy = economy;
             _rules = rules;
@@ -58,8 +62,7 @@ namespace SelfBulletting.Gameplay
         {
             while (true)
             {
-                Vector3 ballCenter = GetBallCenter();
-                bool isBlocked = _pathScanner.TryFindFirstObstacle(ballCenter, GetFinishCenter(), _ball.WorldRadius, out RaycastHit firstObstacle);
+                bool isBlocked = _pathScanner.TryFindFirstObstacle(_path, _ball.WorldRadius, out RaycastHit firstObstacle);
 
                 switch (_rules.Evaluate(!isBlocked, _ball.RadiusPercent))
                 {
@@ -81,17 +84,24 @@ namespace SelfBulletting.Gameplay
         {
             ShotMode mode = _economy.GetShotMode(_ball.RadiusPercent);
             FiredShot shot = await _aim.TakeShotAsync(mode, blocker, cancellationToken);
-            ShotTarget target = shot.Target;
 
             _ball.Spend(shot.Request.CostPercent);
             _audio.Play(SoundId.ShotFire);
-            await _views.Shot.FlyAsync(target.ContactCenter, _economy.ShotSpeed, cancellationToken);
+            if (shot.IsLob)
+            {
+                await _views.Shot.LobAsync(shot.Lob.Arc, _economy.ShotSpeed, cancellationToken);
+            }
+            else
+            {
+                await _views.Shot.FlyAsync(shot.Target.ContactCenter, _economy.ShotSpeed, cancellationToken);
+            }
+
             _views.Shot.Hide();
 
-            _level.TryGetObstacle(target.Obstacle, out Obstacle directHit);
-            int destroyed = await _cascade.RunAsync(target.ImpactPoint, shot.Request.DamageWorldRadius, directHit,
+            _level.TryGetObstacle(shot.DirectHit, out Obstacle directHit);
+            int destroyed = await _cascade.RunAsync(shot.ImpactPoint, shot.Request.DamageWorldRadius, directHit,
                 _onObstacleDestroyed, cancellationToken);
-            ShowComboIfAny(target.ImpactPoint, _score.AddShot(destroyed));
+            ShowComboIfAny(shot.ImpactPoint, _score.AddShot(destroyed));
             ShowBallHealth();
         }
 
@@ -104,7 +114,7 @@ namespace SelfBulletting.Gameplay
         private async UniTask<GameResult> FinishAsync(CancellationToken cancellationToken)
         {
             _audio.Play(SoundId.Win);
-            await _winSequence.PlayAsync(_level.StartPoint, _level.FinishPoint, cancellationToken);
+            await _winSequence.PlayAsync(_path, cancellationToken);
             _score.AwardHealthBonus(_economy.GetRemainder(_ball.RadiusPercent));
             return GameResult.Finish(_score.Summary);
         }
@@ -128,10 +138,5 @@ namespace SelfBulletting.Gameplay
         // The bigger the combo, the brighter the sound; tiers above the last sound reuse the brightest one.
         private static SoundId GetComboSound(int comboLevel) =>
             _comboSounds[Mathf.Clamp(comboLevel - 1, 0, _comboSounds.Length - 1)];
-
-        // The sphere is swept at the height of the ball centre, so it touches the ground like the ball does.
-        private Vector3 GetBallCenter() => _level.StartPoint + Vector3.up * _ball.WorldRadius;
-
-        private Vector3 GetFinishCenter() => _level.FinishPoint + Vector3.up * _ball.WorldRadius;
     }
 }

@@ -11,6 +11,9 @@ namespace SelfBulletting.Gameplay.Presentation
         /// <summary>The obstacle caught the infection (in the reference it turns the player's orange).</summary>
         void ShowInfected();
 
+        /// <summary>Aim modes: the obstacle lies inside the damage ring of the shot being aimed.</summary>
+        void SetHighlighted(bool isHighlighted);
+
         /// <summary>The explosion. The obstacle is disabled when it completes.</summary>
         UniTask PlayExplosionAsync(CancellationToken cancellationToken);
     }

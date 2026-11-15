@@ -12,15 +12,26 @@ namespace SelfBulletting.Views.Aim
         [SerializeField] private DamageZoneView _damageZone;
         [SerializeField] private LastShotHint _lastShotHint;
 
-        public void Show()
+        public void ShowScale()
         {
             _scaleBar.Show();
-            _damageZone.Show();
         }
 
         public void SetScale(float scale, float limit)
         {
             _scaleBar.SetValue(scale, limit);
+        }
+
+        public void SetDamageZoneVisible(bool isVisible)
+        {
+            if (isVisible)
+            {
+                _damageZone.Show();
+            }
+            else
+            {
+                _damageZone.Hide();
+            }
         }
 
         public void SetDamageZone(Vector3 impactPoint, float damageWorldRadius)
@@ -29,9 +40,9 @@ namespace SelfBulletting.Views.Aim
             _damageZone.SetRadius(damageWorldRadius);
         }
 
-        public void SetLastShotHint(bool isVisible)
+        public void SetLastShotHint(bool isVisible, bool isAimed)
         {
-            _lastShotHint.SetVisible(isVisible);
+            _lastShotHint.SetVisible(isVisible, isAimed);
         }
 
         public void Hide()

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using SelfBulletting.Configs;
+using SelfBulletting.Gameplay.Paths;
 using SelfBulletting.Gameplay.Presentation;
 using SelfBulletting.Infrastructure.Services.Audio;
 using UnityEngine;
@@ -9,7 +10,7 @@ using UnityEngine;
 namespace SelfBulletting.Gameplay.Finish
 {
     /// <summary>
-    /// The ball hops along the centre of the cleared path; the door opens once the ball is close enough.
+    /// The ball hops along the centre of the cleared path; the door opens once the ball is close enough along the path.
     /// </summary>
     public sealed class WinSequence
     {
@@ -24,26 +25,25 @@ namespace SelfBulletting.Gameplay.Finish
             _audio = audio;
         }
 
-        public async UniTask PlayAsync(Vector3 fromGroundPoint, Vector3 toGroundPoint, CancellationToken cancellationToken)
+        public async UniTask PlayAsync(GroundPath path, CancellationToken cancellationToken)
         {
-            IReadOnlyList<Vector3> hops = HopPath.Build(fromGroundPoint, toGroundPoint, _settings.HopLength);
-            Vector3 current = fromGroundPoint;
+            IReadOnlyList<Vector3> hops = HopPath.Build(path, _settings.HopLength);
+            float hopLength = hops.Count > 0 ? path.Length / hops.Count : 0f;
             bool isDoorOpen = false;
 
-            foreach (Vector3 hop in hops)
+            for (int i = 0; i < hops.Count; i++)
             {
-                isDoorOpen = OpenDoorWhenClose(current, toGroundPoint, isDoorOpen);
+                isDoorOpen = OpenDoorWhenClose(path.Length - hopLength * i, isDoorOpen);
                 _audio.Play(SoundId.Hop);
-                await _views.Ball.HopAsync(hop, _settings.HopHeight, _settings.HopDurationSeconds, cancellationToken);
-                current = hop;
+                await _views.Ball.HopAsync(hops[i], _settings.HopHeight, _settings.HopDurationSeconds, cancellationToken);
             }
 
-            OpenDoorWhenClose(current, toGroundPoint, isDoorOpen);
+            OpenDoorWhenClose(0f, isDoorOpen);
         }
 
-        private bool OpenDoorWhenClose(Vector3 ballPoint, Vector3 doorPoint, bool isDoorOpen)
+        private bool OpenDoorWhenClose(float distanceToDoor, bool isDoorOpen)
         {
-            if (isDoorOpen || Vector3.Distance(ballPoint, doorPoint) > _settings.DoorOpenDistance)
+            if (isDoorOpen || distanceToDoor > _settings.DoorOpenDistance)
             {
                 return isDoorOpen;
             }

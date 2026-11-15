@@ -8,7 +8,7 @@ namespace SelfBulletting.Views.Levels
 {
     /// <summary>
     /// Fits the shared Game scene to the loaded level: moves the finish building to the level finish and turns it
-    /// to face the path, hands the steam and water effects to the fire views and frames the camera on the new layout.
+    /// along the direction in which the path arrives, hands the steam and water effects to the fire views and frames the camera on the new layout.
     /// </summary>
     public sealed class LevelPresenter : MonoBehaviour, ILevelView
     {
@@ -20,11 +20,9 @@ namespace SelfBulletting.Views.Levels
         [SerializeField] private SteamPuffEffect _steamPuff;
         [SerializeField] private WaterSplashEffect _waterSplash;
 
-        public void Present(Vector3 startGroundPoint, Vector3 finishGroundPoint, Transform obstaclesRoot)
+        public void Present(Vector3 startGroundPoint, Vector3 finishGroundPoint, Vector3 finishDirection, Transform obstaclesRoot)
         {
-            Vector3 pathDirection = finishGroundPoint - startGroundPoint;
-            pathDirection.y = 0f;
-            _finish.SetPositionAndRotation(finishGroundPoint, Quaternion.LookRotation(pathDirection.normalized, Vector3.up));
+            _finish.SetPositionAndRotation(finishGroundPoint, Quaternion.LookRotation(finishDirection, Vector3.up));
 
             foreach (ObstacleView view in obstaclesRoot.GetComponentsInChildren<ObstacleView>(includeInactive: true))
             {

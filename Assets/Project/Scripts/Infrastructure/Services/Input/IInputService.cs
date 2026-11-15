@@ -1,3 +1,5 @@
+using UnityEngine;
+
 namespace SelfBulletting.Infrastructure.Services.Input
 {
     /// <summary>
@@ -8,5 +10,8 @@ namespace SelfBulletting.Infrastructure.Services.Input
         bool IsPressed { get; }
         bool WasPressedThisFrame { get; }
         bool WasReleasedThisFrame { get; }
+
+        /// <summary>Where the finger (or the mouse) is, screen pixels.</summary>
+        Vector2 Position { get; }
     }
 }

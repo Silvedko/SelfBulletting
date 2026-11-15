@@ -511,6 +511,7 @@ MonoBehaviour:
   _loadingCurtain: {fileID: 27236226}
   _soundLibrary: {fileID: 11400000, guid: 65dc04d2294b4f1479454c156618b50f, type: 2}
   _levelCatalog: {fileID: 11400000, guid: 678b6952649b9944ca2a838fbe3fe542, type: 2}
+  _curvedLevelCatalog: {fileID: 11400000, guid: 9a0f8832aaead0e4cad0db2ec08421c7, type: 2}
 --- !u!4 &1051476527
 Transform:
   m_ObjectHideFlags: 0

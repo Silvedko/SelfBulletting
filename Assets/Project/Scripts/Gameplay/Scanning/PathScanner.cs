@@ -1,11 +1,12 @@
 using SelfBulletting.Configs;
+using SelfBulletting.Gameplay.Paths;
 using UnityEngine;
 
 namespace SelfBulletting.Gameplay.Scanning
 {
     /// <summary>
-    /// Sweeps a sphere of the ball size along the straight path to the finish.
-    /// The nearest obstacle is both what blocks the ball and what the next shot flies into.
+    /// Sweeps a sphere of the ball size along the path to the finish, segment by segment, at the height of the ball centre.
+    /// The first obstacle along the path is what blocks the ball; in Classic the next shot also flies into it.
     /// </summary>
     public sealed class PathScanner
     {
@@ -19,6 +20,25 @@ namespace SelfBulletting.Gameplay.Scanning
         }
 
         public bool IsClear(Vector3 from, Vector3 to, float radius) => !TryFindFirstObstacle(from, to, radius, out _);
+
+        public bool IsClear(GroundPath path, float radius) => !TryFindFirstObstacle(path, radius, out _);
+
+        /// <summary>The first obstacle along the path: segments are swept in order, the nearest hit of the first blocked one wins.</summary>
+        /// <param name="radius">Ball radius; the sphere is lifted by it, so it touches the ground like the ball does.</param>
+        public bool TryFindFirstObstacle(GroundPath path, float radius, out RaycastHit firstHit)
+        {
+            Vector3 lift = Vector3.up * radius;
+            for (int i = 1; i < path.Points.Count; i++)
+            {
+                if (TryFindFirstObstacle(path.Points[i - 1] + lift, path.Points[i] + lift, radius, out firstHit))
+                {
+                    return true;
+                }
+            }
+
+            firstHit = default;
+            return false;
+        }
 
         public bool TryFindFirstObstacle(Vector3 from, Vector3 to, float radius, out RaycastHit firstHit)
         {

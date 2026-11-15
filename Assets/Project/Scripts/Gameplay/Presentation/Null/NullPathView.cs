@@ -1,10 +1,11 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace SelfBulletting.Gameplay.Presentation.Null
 {
     public sealed class NullPathView : IPathView
     {
-        public void SetPath(Vector3 fromGroundPoint, Vector3 toGroundPoint)
+        public void SetPath(IReadOnlyList<Vector3> groundPoints)
         {
         }
 
