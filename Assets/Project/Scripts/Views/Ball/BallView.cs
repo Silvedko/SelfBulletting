@@ -8,8 +8,9 @@ using UnityEngine;
 namespace SelfBulletting.Views.Ball
 {
     /// <summary>
-    /// The player ball. The root stands on the ground point and hops; the body sphere is lifted by its radius.
-    /// Size changes ease in, the warning pulse inflates the ball and tints it.
+    /// The player ball: a drop of water. The root stands on the ground point and hops; the body sphere is lifted by
+    /// its radius. The water drop material pulls the upper half of the sphere into a tip and keeps the lower half,
+    /// so the drop is exactly as wide as the ball. Size changes ease in, the warning pulse inflates the drop and tints it.
     /// </summary>
     public sealed class BallView : MonoBehaviour, IBallView
     {

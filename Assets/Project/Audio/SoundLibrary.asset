@@ -30,7 +30,7 @@ MonoBehaviour:
     _minIntervalSeconds: 0
   - _id: 2
     _clip: {fileID: 8300000, guid: b7256fb0390c7734a98cface65f55269, type: 3}
-    _volume: 0.7
+    _volume: 1
     _pitchVariation: 0.05
     _maxVoices: 2
     _minIntervalSeconds: 0
@@ -42,7 +42,7 @@ MonoBehaviour:
     _minIntervalSeconds: 0.04
   - _id: 4
     _clip: {fileID: 8300000, guid: 969e361d8adfdd3478779fdeabeff6dc, type: 3}
-    _volume: 0.55
+    _volume: 0.4
     _pitchVariation: 0.15
     _maxVoices: 4
     _minIntervalSeconds: 0.035

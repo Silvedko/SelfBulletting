@@ -1,13 +1,14 @@
 using SelfBulletting.Gameplay.Presentation;
 using SelfBulletting.Views.Framing;
 using SelfBulletting.Views.Obstacles;
+using SelfBulletting.Views.Water;
 using UnityEngine;
 
 namespace SelfBulletting.Views.Levels
 {
     /// <summary>
     /// Fits the shared Game scene to the loaded level: moves the finish building to the level finish and turns it
-    /// to face the path, hands the explosion effect to the obstacle views and frames the camera on the new layout.
+    /// to face the path, hands the steam and water effects to the fire views and frames the camera on the new layout.
     /// </summary>
     public sealed class LevelPresenter : MonoBehaviour, ILevelView
     {
@@ -15,7 +16,9 @@ namespace SelfBulletting.Views.Levels
         [SerializeField] private Transform _finish;
 
         [SerializeField] private CameraFraming _framing;
-        [SerializeField] private ExplosionEffect _explosion;
+
+        [SerializeField] private SteamPuffEffect _steamPuff;
+        [SerializeField] private WaterSplashEffect _waterSplash;
 
         public void Present(Vector3 startGroundPoint, Vector3 finishGroundPoint, Transform obstaclesRoot)
         {
@@ -25,7 +28,7 @@ namespace SelfBulletting.Views.Levels
 
             foreach (ObstacleView view in obstaclesRoot.GetComponentsInChildren<ObstacleView>(includeInactive: true))
             {
-                view.Construct(_explosion);
+                view.Construct(_steamPuff, _waterSplash);
             }
 
             _framing.FrameLevel(startGroundPoint);

@@ -5,7 +5,7 @@ using UnityEngine;
 namespace SelfBulletting.Views.Path
 {
     /// <summary>
-    /// The pink strip on the ground from the ball to the finish. Its width eases to the ball diameter;
+    /// The water-blue strip on the ground from the ball to the finish. Its width eases to the ball diameter;
     /// the warning pulse widens and tints it in sync with the ball.
     /// </summary>
     public sealed class PathView : MonoBehaviour, IPathView

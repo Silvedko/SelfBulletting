@@ -2,23 +2,27 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using SelfBulletting.Gameplay.Presentation;
+using SelfBulletting.Views.Water;
 using UnityEngine;
 
 namespace SelfBulletting.Views.Shot
 {
     /// <summary>
-    /// The shot ball. It pops out in front of the player ball and follows the charge every frame: as big as what
-    /// the ball gives away. Then it rolls straight along the path to the point where it touches the obstacle.
-    /// Gameplay computes every position; this view only shows and animates them.
+    /// The shot: a droplet of the player's water. It pops out in front of the player ball and follows the charge
+    /// every frame: as big as what the ball gives away. Then it rolls straight along the path to the point where it
+    /// touches the obstacle and splashes there. Gameplay computes every position; this view only shows and animates them.
     /// </summary>
     public sealed class ShotView : MonoBehaviour, IShotView
     {
         private const float DiameterPerRadius = 2f;
 
-        [Tooltip("Sphere of 1 m diameter, child of this object.")]
+        [Tooltip("Sphere of 1 m diameter with the water drop material, child of this object.")]
         [SerializeField] private Transform _body;
 
         [SerializeField, Min(0.01f)] private float _separationSeconds = 0.15f;
+
+        [Tooltip("Splash where the shot lands. Optional.")]
+        [SerializeField] private WaterSplashEffect _splash;
 
         private Tween _separation;
         private Tween _flight;
@@ -47,6 +51,11 @@ namespace SelfBulletting.Views.Shot
             float seconds = Vector3.Distance(_body.position, contactCenter) / speed;
             _flight = _body.DOMove(contactCenter, seconds).SetEase(Ease.Linear).SetLink(gameObject);
             await _flight.ToUniTask(cancellationToken: cancellationToken);
+
+            if (_splash != null)
+            {
+                _splash.PlayImpact(contactCenter + Vector3.down * _radius, _radius);
+            }
         }
 
         public void Hide()

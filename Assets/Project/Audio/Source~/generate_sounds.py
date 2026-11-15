@@ -94,6 +94,13 @@ def saturate(signal, drive):
     return np.tanh(drive * signal) / np.tanh(drive)
 
 
+def flutter(sample_count, rate_hz, rng):
+    """Smooth random wobble in -1..1 that changes about rate_hz times a second."""
+    points = rng.uniform(-1.0, 1.0, int(sample_count / SAMPLE_RATE * rate_hz) + 2)
+    positions = np.linspace(0.0, len(points) - 1, sample_count)
+    return np.interp(positions, np.arange(len(points)), points)
+
+
 # ---------- sounds ----------
 
 def ui_click():
@@ -114,12 +121,37 @@ def aim_charge():
     return (hum + fizz) * tremolo
 
 
-def shot_fire():
-    t = timeline(0.28)
-    zap = sweep(1100, 220, t, 0.2) * decay(t, 0.002, 0.07)
-    hiss = band_noise(len(t), 1000, 6000) * decay(t, 0.001, 0.03)
-    thump = sweep(120, 60, t, 0.1) * decay(t, 0.002, 0.05)
-    return saturate(zap + 0.35 * hiss + 0.5 * thump, 1.5)
+SPLASH_SECONDS = 0.28
+SPLASH_SEED = 17
+SPLASH_DROPLETS = 4
+
+
+def droplet(t, start_hz, end_hz):
+    """The plink of a water drop: a short tone whose pitch jumps upwards, like a bursting bubble."""
+    return sweep(start_hz, end_hz, t, 0.02) * decay(t, 0.001, 0.012)
+
+
+def water_shot():
+    """The shot leaves the ball as a splash of water (SoundId.ShotFire): a bubbly bloop, a wet burst of spray
+    and a few droplets landing after it.
+
+    Takes exactly one noise buffer of the clip length from the shared RNG, as the shot sound it replaced did, so every
+    clip generated after it stays byte-identical. Everything else comes from its own seed."""
+    t = timeline(SPLASH_SECONDS)
+    spray_noise = band_noise(len(t), 500, 7000)
+    rng = np.random.default_rng(SPLASH_SEED)
+
+    bloop = sweep(260, 820, t, 0.045) * decay(t, 0.002, 0.05)
+    spray = spray_noise * (0.6 + 0.4 * flutter(len(t), 70, rng)) * decay(t, 0.003, 0.055)
+    body = sweep(150, 80, t, 0.06) * decay(t, 0.002, 0.03)
+
+    droplets = np.zeros(len(t))
+    droplet_t = timeline(0.05)
+    for start in np.sort(rng.uniform(0.05, 0.2, SPLASH_DROPLETS)):
+        low = rng.uniform(1200, 1900)
+        place(droplets, droplet(droplet_t, low, low * 2.0) * rng.uniform(0.5, 1.0), start)
+
+    return saturate(0.8 * bloop + 0.55 * spray + 0.3 * body + 0.35 * droplets, 1.3)
 
 
 def infect():
@@ -128,12 +160,32 @@ def infect():
     return tone * decay(t, 0.002, 0.025)
 
 
-def explode():
-    t = timeline(0.3)
-    thump = sweep(220, 55, t, 0.12) * decay(t, 0.001, 0.06)
-    puff = band_noise(len(t), 80, 2500) * decay(t, 0.001, 0.07)
-    pop = sine(2000, t) * decay(t, 0.0005, 0.005)
-    return saturate(0.9 * thump + 0.6 * puff + 0.3 * pop, 1.5)
+SIZZLE_SECONDS = 0.3
+SIZZLE_SEED = 11
+SIZZLE_CRACKLES = 4
+
+
+def sizzle():
+    """A fire put out by water (SoundId.Explode): a steam hiss that falls in pitch and dies away, bubbling as it goes,
+    a soft wet splash under its start and the last few crackles of the fire.
+
+    Takes exactly one noise buffer of the clip length from the shared RNG, as the explosion it replaced did, so every
+    clip generated after it stays byte-identical. Everything else comes from its own seed."""
+    t = timeline(SIZZLE_SECONDS)
+    steam_noise = band_noise(len(t), 1500, 9500)
+    rng = np.random.default_rng(SIZZLE_SEED)
+
+    bubbling = 0.65 + 0.35 * flutter(len(t), 45, rng)
+    hiss = sweeping_bandpass(steam_noise, 7000, 2500, resonance=1.0) * bubbling * decay(t, 0.006, 0.09)
+    splash = band_noise(len(t), 400, 2000, rng) * decay(t, 0.002, 0.025)
+    thump = sweep(170, 70, t, 0.08) * decay(t, 0.002, 0.03)
+
+    crackles = np.zeros(len(t))
+    crack_t = timeline(0.012)
+    for start in rng.uniform(0.0, 0.12, SIZZLE_CRACKLES):
+        place(crackles, sine(rng.uniform(1800, 3500), crack_t) * decay(crack_t, 0.0003, 0.002), start)
+
+    return saturate(hiss + 0.4 * splash + 0.35 * thump + 0.25 * crackles, 1.2)
 
 
 COMBO_RELEASE_SECONDS = 0.15
@@ -311,9 +363,9 @@ def lose():
 SOUNDS = {
     "UiClick": (ui_click, False),
     "AimCharge": (aim_charge, True),
-    "ShotFire": (shot_fire, False),
+    "ShotFire": (water_shot, False),
     "Infect": (infect, False),
-    "Explode": (explode, False),
+    "Explode": (sizzle, False),
     "Combo": (combo, False),
     "Warning": (warning, False),
     "LastShot": (last_shot, False),
