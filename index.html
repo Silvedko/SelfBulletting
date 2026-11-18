@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#2b2e42">
+  <title>SelfBulletting</title>
+  <style>
+    :root {
+      --page: #1d1f2d;
+      --menu: #2b2e42;
+      --water: #5ec8f2;
+      --text: #eef3f8;
+      --muted: #a3acc2;
+      --error: #ff9a7a;
+    }
+
+    html, body {
+      margin: 0;
+      height: 100%;
+      overflow: hidden;
+      overscroll-behavior: none;
+      background: var(--page);
+    }
+
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      color: var(--text);
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Portrait game: a 9:16 column on a wide screen, the whole screen on a phone (up to 9:21). */
+    #stage {
+      position: relative;
+      width: min(100vw, calc(100vh * 9 / 16));
+      height: min(100vh, calc(100vw * 21 / 9));
+    }
+
+    @supports (height: 100dvh) {
+      #stage {
+        width: min(100vw, calc(100dvh * 9 / 16));
+        height: min(100dvh, calc(100vw * 21 / 9));
+      }
+    }
+
+    #unity-canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      background: var(--menu);
+      outline: none;
+      touch-action: none;
+    }
+
+    #loader {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 22px;
+      background: var(--menu);
+      transition: opacity 0.4s ease;
+    }
+
+    #loader.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .drop {
+      width: 44px;
+      height: 44px;
+      border-radius: 0 50% 50% 50%;
+      background: var(--water);
+      transform: rotate(45deg);
+      animation: bob 1.4s ease-in-out infinite;
+    }
+
+    @keyframes bob {
+      0%, 100% { transform: translateY(0) rotate(45deg); }
+      50% { transform: translateY(-8px) rotate(45deg); }
+    }
+
+    #title {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    #bar {
+      width: 60%;
+      height: 6px;
+      border-radius: 3px;
+      background: rgba(255, 255, 255, 0.12);
+      overflow: hidden;
+    }
+
+    #fill {
+      width: 0;
+      height: 100%;
+      background: var(--water);
+      transition: width 0.2s ease;
+    }
+
+    #message {
+      min-height: 1.4em;
+      padding: 0 24px;
+      font-size: 14px;
+      line-height: 1.4;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    #message.error {
+      color: var(--error);
+    }
+  </style>
+</head>
+<body>
+  <div id="stage">
+    <canvas id="unity-canvas" width="540" height="960" tabindex="-1"></canvas>
+    <div id="loader">
+      <div class="drop"></div>
+      <div id="title">SelfBulletting</div>
+      <div id="bar"><div id="fill"></div></div>
+      <div id="message">Loading…</div>
+    </div>
+  </div>
+  <script src="Build/7cfbcb16796c87f1af1ade74574dab48.loader.js"></script>
+  <script>
+    (function () {
+      var canvas = document.getElementById("unity-canvas");
+      var loader = document.getElementById("loader");
+      var fill = document.getElementById("fill");
+      var message = document.getElementById("message");
+
+      function showError(text) {
+        loader.classList.remove("hidden");
+        message.classList.add("error");
+        message.textContent = text;
+      }
+
+      if (!window.WebGL2RenderingContext) {
+        showError("This browser has no WebGL 2. Try a recent Chrome, Edge, Firefox or Safari.");
+        return;
+      }
+
+      var config = {
+        dataUrl: "Build/bff1ed37661816230d5a555f04e64e9a.data.unityweb",
+        frameworkUrl: "Build/07f211dcf5141e4c8a23ba60a7db8862.framework.js.unityweb",
+        codeUrl: "Build/40452a5661a010779c536b5348d1dc3b.wasm.unityweb",
+        streamingAssetsUrl: "StreamingAssets",
+        companyName: "DefaultCompany",
+        productName: "SelfBulletting",
+        productVersion: "0.1.0",
+        // Phone screens are up to 3x; 2x is sharp enough and far cheaper to fill.
+        devicePixelRatio: Math.min(window.devicePixelRatio || 1, 2),
+        showBanner: function (text, type) {
+          if (type === "error") {
+            showError(text);
+          } else {
+            console.warn(text);
+          }
+        }
+      };
+
+      createUnityInstance(canvas, config, function (progress) {
+        fill.style.width = Math.round(progress * 100) + "%";
+      }).then(function () {
+        loader.classList.add("hidden");
+        canvas.focus();
+      }).catch(function (error) {
+        showError(String(error));
+      });
+    })();
+  </script>
+</body>
+</html>
