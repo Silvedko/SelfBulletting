@@ -14,7 +14,7 @@ namespace SelfBulletting.Tests.Gameplay
         public void SetUp()
         {
             var tiers = new[] { new ComboTier(3, 1.5f), new ComboTier(6, 2f), new ComboTier(10, 3f) };
-            _counter = new ScoreCounter(new ScoreSettings(10, tiers, pointsPerRemainingPercent: 30));
+            _counter = new ScoreCounter(new ScoreSettings(10, pointsPerRemainingPercent: 30), new ComboSettings(tiers));
         }
 
         [Test]
@@ -63,10 +63,45 @@ namespace SelfBulletting.Tests.Gameplay
         public void GetMultiplier_UnsortedTiers_StillPicksHighestReachedTier()
         {
             var tiers = new[] { new ComboTier(10, 3f), new ComboTier(3, 1.5f), new ComboTier(6, 2f) };
-            var counter = new ScoreCounter(new ScoreSettings(10, tiers, pointsPerRemainingPercent: 30));
+            var counter = new ScoreCounter(new ScoreSettings(10, pointsPerRemainingPercent: 30), new ComboSettings(tiers));
 
             Assert.AreEqual(2f, counter.GetMultiplier(7), Tolerance);
             Assert.AreEqual(2, counter.GetComboLevel(7));
+        }
+
+        [Test]
+        public void AddObstacle_WithoutCombo_CountsEveryFireAtFaceValue()
+        {
+            var counter = new ScoreCounter(new ScoreSettings(10, pointsPerRemainingPercent: 100), ComboSettings.None);
+
+            for (int i = 0; i < 5; i++)
+            {
+                Assert.AreEqual(10, counter.AddObstacle());
+            }
+
+            ScoreSummary summary = counter.Summary;
+            Assert.AreEqual(5, summary.DestroyedObstacles);
+            Assert.AreEqual(50, summary.BasePoints);
+            Assert.AreEqual(0, summary.ComboBonus);
+            Assert.IsFalse(summary.HasCombo);
+        }
+
+        [Test]
+        public void AddShot_WithoutComboTiers_NeverMultiplies()
+        {
+            var counter = new ScoreCounter(new ScoreSettings(10, pointsPerRemainingPercent: 100), ComboSettings.None);
+
+            ShotScore score = counter.AddShot(12);
+
+            Assert.IsFalse(score.IsCombo);
+            Assert.AreEqual(0, score.ComboBonus);
+            Assert.AreEqual(4000, counter.AwardHealthBonus(40f));
+        }
+
+        [Test]
+        public void Summary_WithComboTiers_HasCombo()
+        {
+            Assert.IsTrue(_counter.Summary.HasCombo);
         }
 
         [TestCase(2, 0)]

@@ -20,46 +20,6 @@ MonoBehaviour:
     _fadeOutSeconds: 0.35
   _ball:
     _startRadius: 1.5
-  _aim:
-    _halfPeriodSeconds: 3
-  _shot:
-    _minShootPercent: 5
-    _maxShootPercent: 25
-    _damageRadiusMinPercent: 35
-    _damageRadiusMaxPercent: 200
-    _shotStartRadiusPercent: 7
-    _shotSpeed: 15
-  _lob:
-    _minRange: 3
-    _maxRange: 24
-    _apexHeightPerMeter: 0.25
-    _minApexHeight: 1
-  _slingshot:
-    _deadZoneScreenShare: 0.05
-    _fullPullScreenShare: 0.4
-  _arrow:
-    _sectorCenterDegrees: 45
-    _sectorWidthDegrees: 90
-    _swingHalfPeriodSeconds: 1.2
-    _rangeHalfPeriodSeconds: 1.5
-  _infection:
-    _waveSpeed: 8
-    _infectDurationSeconds: 0.25
-  _score:
-    _pointsPerObstacle: 10
-    _comboTiers:
-    - _minObstacles: 3
-      _multiplier: 1.5
-    - _minObstacles: 6
-      _multiplier: 2
-    - _minObstacles: 10
-      _multiplier: 3
-    _pointsPerRemainingPercent: 30
-  _feedback:
-    _warningPercent: 15
-    _vibrationPulseMs: 40
-    _vibrationIntervalMaxMs: 400
-    _vibrationIntervalMinMs: 120
   _finish:
     _doorOpenDistance: 5
     _hopLength: 1.5

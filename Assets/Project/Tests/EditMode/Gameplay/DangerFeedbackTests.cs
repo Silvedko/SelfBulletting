@@ -19,7 +19,7 @@ namespace SelfBulletting.Tests.Gameplay
         {
             _vibration = new CountingVibrationService();
             var settings = new FeedbackSettings(warningPercent: 15f, vibrationPulseMs: 40, vibrationIntervalMaxMs: 400, vibrationIntervalMinMs: 120);
-            _feedback = new DangerFeedback(settings, TestSettings.Shot(), _vibration, new NullAudioService());
+            _feedback = new DangerFeedback(settings, TestSettings.MinShootPercent, _vibration, new NullAudioService());
         }
 
         [TestCase(20f, 0f)]

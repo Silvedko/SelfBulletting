@@ -37,5 +37,14 @@ namespace SelfBulletting.Gameplay.Shot
             float t = Mathf.Clamp01(share);
             return Vector3.Lerp(Start, End, t) + Vector3.up * (ParabolaPeak * ApexHeight * t * (1f - t));
         }
+
+        /// <summary>Unit direction of the flight at that point: up after the launch, level at the apex, down at landing.</summary>
+        /// <param name="share">0 — launch, 1 — landing.</param>
+        public Vector3 GetDirection(float share)
+        {
+            float t = Mathf.Clamp01(share);
+            Vector3 tangent = End - Start + Vector3.up * (ParabolaPeak * ApexHeight * (1f - 2f * t));
+            return tangent.sqrMagnitude > Mathf.Epsilon ? tangent.normalized : Vector3.forward;
+        }
     }
 }

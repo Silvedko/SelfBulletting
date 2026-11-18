@@ -12,7 +12,8 @@ namespace SelfBulletting.Views.Obstacles
     /// <summary>
     /// Look of one obstacle: a burning flame. When the water reaches it, a puddle spreads under it, the flame shudders
     /// and the water climbs it from the base, turning it to steam; then it hisses out in a puff of steam and sinks
-    /// into the ground. While the player aims a lobbed shot, the flames inside its damage ring take a watery tint.
+    /// into the ground. A Hose drop that does not put the fire out yet raises the water part of the way. While the player
+    /// aims a lobbed shot (or the hose), the flames it is about to hit take a watery tint.
     /// The douse level and the tint go through a MaterialPropertyBlock, so every flame shares one material.
     /// </summary>
     public sealed class ObstacleView : MonoBehaviour, IObstacleView
@@ -73,6 +74,20 @@ namespace SelfBulletting.Views.Obstacles
 
             _infection = DOTween.Sequence()
                 .Join(DOTween.To(_getDouse, _setDouse, _infectedDouse, _infectSeconds).SetEase(Ease.OutQuad))
+                .Join(_model.DOPunchScale(_modelScale * _infectPunch, _infectSeconds))
+                .SetLink(gameObject);
+        }
+
+        public void ShowWetted(float share)
+        {
+            if (_waterSplash != null)
+            {
+                _waterSplash.PlaySpread(transform.position);
+            }
+
+            _infection?.Kill(complete: true);
+            _infection = DOTween.Sequence()
+                .Join(DOTween.To(_getDouse, _setDouse, _infectedDouse * Mathf.Clamp01(share), _infectSeconds).SetEase(Ease.OutQuad))
                 .Join(_model.DOPunchScale(_modelScale * _infectPunch, _infectSeconds))
                 .SetLink(gameObject);
         }

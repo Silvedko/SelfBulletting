@@ -1,20 +1,19 @@
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using SelfBulletting.Configs;
-using SelfBulletting.Gameplay.Aim;
+using SelfBulletting.Configs.Modes;
 using SelfBulletting.Gameplay.Ball;
 using SelfBulletting.Gameplay.Feedback;
 using SelfBulletting.Gameplay.Finish;
 using SelfBulletting.Gameplay.Levels;
 using SelfBulletting.Gameplay.Modes;
-using SelfBulletting.Gameplay.Obstacles;
 using SelfBulletting.Gameplay.Paths;
 using SelfBulletting.Gameplay.Presentation;
 using SelfBulletting.Gameplay.Presentation.Null;
 using SelfBulletting.Gameplay.Rules;
 using SelfBulletting.Gameplay.Scanning;
 using SelfBulletting.Gameplay.Score;
-using SelfBulletting.Gameplay.Shot;
+using SelfBulletting.Gameplay.Strategies;
 using SelfBulletting.UI.Final;
 using UnityEngine;
 
@@ -22,8 +21,8 @@ namespace SelfBulletting.Gameplay
 {
     /// <summary>
     /// Composition root of the Game scene: loads the level prefab and builds the round for the chosen game mode from
-    /// the app services, the level and the views. The scene itself (camera, ground, UI, views) is shared by every level
-    /// and every mode; only the path and the aiming differ.
+    /// the app services, the mode config, the level and the views. The scene itself (camera, ground, UI, views) is shared
+    /// by every level and every mode; only the path and the turn differ.
     /// </summary>
     public sealed class GameEntryPoint : MonoBehaviour
     {
@@ -42,8 +41,9 @@ namespace SelfBulletting.Gameplay
         [SerializeField] private MonoBehaviour _healthView;
         [SerializeField] private MonoBehaviour _levelView;
         [SerializeField] private MonoBehaviour _lobAimView;
+        [SerializeField] private MonoBehaviour _hoseView;
 
-        [Tooltip("Maps the finger to the ground for the slingshot. Must implement IScreenToGround.")]
+        [Tooltip("Maps the finger to the ground for the slingshot pull. Must implement IScreenToGround.")]
         [SerializeField] private MonoBehaviour _screenToGround;
 
         private Level _level;
@@ -53,7 +53,7 @@ namespace SelfBulletting.Gameplay
 
         public FinalScreen FinalScreen => _finalScreen;
 
-        public void Construct(GameDependencies dependencies, Level levelPrefab, GameMode mode)
+        public void Construct(GameDependencies dependencies, Level levelPrefab, ModeConfig mode)
         {
             SettingsConfig settings = dependencies.Settings;
 
@@ -62,27 +62,28 @@ namespace SelfBulletting.Gameplay
             _level.Initialize();
             _views = CreateViews();
 
-            GroundPath path = mode.IsAimed() ? _level.CreateCurvedPath() : _level.CreateStraightPath();
+            GroundPath path = mode.Mode.UsesCurvedPath() ? _level.CreateCurvedPath() : _level.CreateStraightPath();
             _views.Level.Present(_level.StartPoint, _level.FinishPoint, path.FinishDirection, _level.ObstaclesRoot);
 
-            var economy = new ShotEconomy(settings.Ball, settings.Shot);
-            _ball = new BallModel(economy);
+            var limits = new BallLimits(settings.Ball.StartRadius, mode.CriticalPercent);
+            _ball = new BallModel(limits);
 
             var pathScanner = new PathScanner(settings.Physics);
-            var obstacleScanner = new ObstacleScanner(settings.Physics);
-            var danger = new DangerFeedback(settings.Feedback, settings.Shot, dependencies.Vibration, dependencies.Audio);
-            var charge = new ChargePreview(economy, _ball, danger, _views);
-            IShotAiming aim = CreateAiming(mode, settings, dependencies, economy, charge, pathScanner, obstacleScanner);
-            var cascade = new ObstacleCascade(obstacleScanner, _level, settings.Infection, dependencies.Audio);
+            var pathCheck = new PathCheck(path, pathScanner, _ball);
+            var score = new ScoreCounter(mode.Score, mode.Combo);
+            var danger = new DangerFeedback(mode.Feedback, mode.CriticalPercent, dependencies.Vibration, dependencies.Audio);
+            IScreenToGround screen = Resolve<IScreenToGround>(_screenToGround) ?? new NullScreenToGround();
+            var strategies = new ShotStrategyFactory(dependencies, screen, _level, _ball, limits, pathScanner,
+                new ObstacleScanner(settings.Physics), pathCheck, danger, score, _views);
             var winSequence = new WinSequence(settings.Finish, _views, dependencies.Audio);
 
-            _loop = new GameLoop(_level, path, _ball, economy, new RoundRules(economy), pathScanner,
-                aim, cascade, new ScoreCounter(settings.Score), winSequence, _views, dependencies.Audio);
+            _loop = new GameLoop(path, _ball, new RoundRules(limits), pathCheck, strategies.Create(mode), score,
+                winSequence, dependencies.Audio);
 
             _views.Ball.Place(_level.StartPoint, _ball.WorldRadius);
             _views.Path.SetPath(path.Points);
             _views.Path.SetWidth(_ball.WorldRadius);
-            _views.Health.Show(_ball.RadiusPercent, economy.GetHealth(_ball.RadiusPercent));
+            _views.Health.Show(_ball.RadiusPercent, _ball.Health);
             _ball.RadiusChanged += ShowBallSize;
         }
 
@@ -92,30 +93,6 @@ namespace SelfBulletting.Gameplay
             {
                 return await _loop.RunAsync(linked.Token);
             }
-        }
-
-        private IShotAiming CreateAiming(GameMode mode, SettingsConfig settings, GameDependencies dependencies,
-            ShotEconomy economy, ChargePreview charge, PathScanner pathScanner, ObstacleScanner obstacleScanner)
-        {
-            var scale = new AimScale(settings.Aim);
-            if (!mode.IsAimed())
-            {
-                var targeting = new ShotTargeting(pathScanner, _level.StartPoint, _level.FinishPoint);
-                return new ClassicAimController(dependencies.Input, economy, scale, targeting, _ball, charge, _views,
-                    dependencies.Audio);
-            }
-
-            var lobTargeting = new LobTargeting(settings.Lob, _level.StartPoint, _level.Field);
-            var preview = new LobPreview(economy, lobTargeting, charge, new TargetHighlight(obstacleScanner, _level), _views);
-            if (mode == GameMode.Slingshot)
-            {
-                IScreenToGround screen = Resolve<IScreenToGround>(_screenToGround) ?? new NullScreenToGround();
-                return new SlingshotAimController(dependencies.Input, screen, new SlingshotPull(settings.Slingshot), economy,
-                    scale, _ball, preview, _views, dependencies.Audio);
-            }
-
-            return new ArrowAimController(dependencies.Input, new ArrowSwing(settings.Arrow), economy, _ball, preview,
-                _level.StartPoint, _views, dependencies.Audio);
         }
 
         private void OnDestroy()
@@ -137,6 +114,7 @@ namespace SelfBulletting.Gameplay
             _healthView = KeepIfImplements<IBallHealthView>(_healthView);
             _levelView = KeepIfImplements<ILevelView>(_levelView);
             _lobAimView = KeepIfImplements<ILobAimView>(_lobAimView);
+            _hoseView = KeepIfImplements<IHoseView>(_hoseView);
             _screenToGround = KeepIfImplements<IScreenToGround>(_screenToGround);
         }
 
@@ -155,7 +133,8 @@ namespace SelfBulletting.Gameplay
             Resolve<IDoorView>(_doorView) ?? new NullDoorView(),
             Resolve<IBallHealthView>(_healthView) ?? new NullBallHealthView(),
             Resolve<ILevelView>(_levelView) ?? new NullLevelView(),
-            Resolve<ILobAimView>(_lobAimView) ?? new NullLobAimView());
+            Resolve<ILobAimView>(_lobAimView) ?? new NullLobAimView(),
+            Resolve<IHoseView>(_hoseView) ?? new NullHoseView());
 
         private static TView Resolve<TView>(MonoBehaviour component) where TView : class =>
             component != null ? component as TView : null;

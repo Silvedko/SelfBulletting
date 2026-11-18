@@ -87,12 +87,23 @@ namespace SelfBulletting.Tests.Gameplay
             Assert.AreEqual(expectedRadius, _economy.GetShotWorldRadius(costPercent), Tolerance);
         }
 
-        [TestCase(100f, 1f)]
-        [TestCase(55f, 0.5f)]
-        [TestCase(10f, 0f)]
-        public void GetHealth_GoesFromFullSizeToCriticalSize(float radiusPercent, float expectedHealth)
+        [TestCase(100f, 20f, 20f)]
+        [TestCase(100f, 4f, 10f)]
+        [TestCase(25f, 20f, 15f)]
+        public void CreateFixedShot_KeepsCostBetweenMinimumShotAndRemainder(float radiusPercent, float fixedCost,
+            float expectedCost)
         {
-            Assert.AreEqual(expectedHealth, _economy.GetHealth(radiusPercent), Tolerance);
+            Assert.AreEqual(expectedCost, _economy.CreateFixedShot(radiusPercent, fixedCost, 100f).CostPercent, Tolerance);
+        }
+
+        [TestCase(100f)]
+        [TestCase(25f)]
+        public void CreateFixedShot_KeepsTheDamageRadiusAtAnyBallSize(float radiusPercent)
+        {
+            ShotRequest shot = _economy.CreateFixedShot(radiusPercent, 20f, 100f);
+
+            Assert.AreEqual(TestSettings.StartRadius, shot.DamageWorldRadius, Tolerance);
+            Assert.AreEqual(0f, shot.Scale, Tolerance);
         }
 
         [Test]

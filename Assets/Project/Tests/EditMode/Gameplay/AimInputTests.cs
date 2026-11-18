@@ -22,7 +22,7 @@ namespace SelfBulletting.Tests.Gameplay
         public void SetUp()
         {
             _pull = new SlingshotPull(new SlingshotSettings(0.05f, 0.4f));
-            _swing = new ArrowSwing(new ArrowSettings(45f, 90f, 1.2f, 1.5f));
+            _swing = new ArrowSwing(new ArrowSettings(45f, 90f, 1.2f, 1.5f, 20f, 100f));
         }
 
         [TestCase(0f)]
@@ -86,27 +86,6 @@ namespace SelfBulletting.Tests.Gameplay
         public void Arrow_LandingPointRunsAlongTheArrowAndBack(float seconds, float expectedShare)
         {
             Assert.AreEqual(expectedShare, _swing.GetRangeShare(seconds), Tolerance);
-        }
-
-        [TestCase(0f, 1f)]
-        [TestCase(0.25f, 0.75f)]
-        [TestCase(1f, 0f)]
-        public void Arrow_ShotShrinksWithRange(float rangeShare, float expectedScale)
-        {
-            Assert.AreEqual(expectedScale, ArrowSwing.GetSizeScale(rangeShare), Tolerance);
-        }
-
-        [Test]
-        public void Arrow_NearRangeOnASmallBall_GivesTheBiggestAffordableShot()
-        {
-            // r = 35% with shots of 10–40%: the scale is cut at 0.5, so the nearest range asks for 1 and gets 0.5.
-            var economy = TestSettings.Economy();
-
-            var nearest = economy.CreateAimedShot(35f, ArrowSwing.GetSizeScale(0f));
-            var farthest = economy.CreateAimedShot(35f, ArrowSwing.GetSizeScale(1f));
-
-            Assert.AreEqual(0.5f, nearest.Scale, Tolerance);
-            Assert.AreEqual(TestSettings.MinShootPercent, farthest.CostPercent, Tolerance);
         }
     }
 }

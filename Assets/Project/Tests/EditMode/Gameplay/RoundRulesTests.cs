@@ -10,7 +10,7 @@ namespace SelfBulletting.Tests.Gameplay
         [SetUp]
         public void SetUp()
         {
-            _rules = new RoundRules(TestSettings.Economy());
+            _rules = new RoundRules(TestSettings.Limits());
         }
 
         [TestCase(100f)]

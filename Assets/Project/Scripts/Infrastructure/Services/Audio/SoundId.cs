@@ -17,6 +17,10 @@ namespace SelfBulletting.Infrastructure.Services.Audio
 
         // Appended, not inserted: SoundLibrary stores ids as numbers. Combo is the first tier, these are the higher ones.
         ComboBig,
-        ComboHuge
+        ComboHuge,
+
+        // Hose mode: the stream loops while the water flows, every drop splashes where it hits.
+        HoseStream,
+        HoseSplash
     }
 }

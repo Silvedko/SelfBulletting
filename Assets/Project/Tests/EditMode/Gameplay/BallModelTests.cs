@@ -13,7 +13,7 @@ namespace SelfBulletting.Tests.Gameplay
         [SetUp]
         public void SetUp()
         {
-            _ball = new BallModel(TestSettings.Economy());
+            _ball = new BallModel(TestSettings.Limits());
         }
 
         [Test]

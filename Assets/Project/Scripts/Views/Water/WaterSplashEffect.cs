@@ -24,6 +24,9 @@ namespace SelfBulletting.Views.Water
 
         [SerializeField, Min(1)] private int _dropletsPerImpact = 14;
 
+        [Tooltip("Droplets out of one Hose drop: it hits many times a second, so far fewer than a shot.")]
+        [SerializeField, Min(0)] private int _dropletsPerDrop = 3;
+
         [Tooltip("Diameter of the impact ripple at its widest and of the impact puddle, shares of the shot radius.")]
         [SerializeField, Min(0f)] private float _impactRippleSize = 9f;
         [SerializeField, Min(0f)] private float _impactPuddleSize = 9f;
@@ -40,6 +43,21 @@ namespace SelfBulletting.Views.Water
             _droplets.Emit(new ParticleSystem.EmitParams { position = position, applyShapeToPosition = true }, _dropletsPerImpact);
             EmitFlat(_ripples, position, shotRadius * _impactRippleSize);
             EmitFlat(_puddles, position, shotRadius * _impactPuddleSize);
+        }
+
+        /// <summary>A Hose drop hit a fire or the ground: a few droplets where it hit, a ripple and a puddle below.</summary>
+        /// <param name="center">The drop centre when it hit.</param>
+        /// <param name="groundPoint">The ground under it.</param>
+        public void PlayDrop(Vector3 center, Vector3 groundPoint, float dropRadius)
+        {
+            if (_dropletsPerDrop > 0)
+            {
+                _droplets.Emit(new ParticleSystem.EmitParams { position = center, applyShapeToPosition = true }, _dropletsPerDrop);
+            }
+
+            Vector3 position = Lift(groundPoint);
+            EmitFlat(_ripples, position, dropRadius * _impactRippleSize);
+            EmitFlat(_puddles, position, dropRadius * _impactPuddleSize);
         }
 
         /// <param name="groundPoint">Foot of a fire the water has just reached.</param>

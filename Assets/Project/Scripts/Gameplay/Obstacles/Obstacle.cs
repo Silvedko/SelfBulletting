@@ -23,6 +23,13 @@ namespace SelfBulletting.Gameplay.Obstacles
             _view.ShowInfected();
         }
 
+        /// <summary>Hose: hit by a drop, not out yet.</summary>
+        /// <param name="share">How much of the fire is put out, below 1.</param>
+        public void Wet(float share)
+        {
+            _view.ShowWetted(share);
+        }
+
         public void SetHighlighted(bool isHighlighted)
         {
             _view.SetHighlighted(isHighlighted);

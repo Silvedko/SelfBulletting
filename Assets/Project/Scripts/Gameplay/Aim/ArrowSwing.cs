@@ -6,7 +6,7 @@ namespace SelfBulletting.Gameplay.Aim
     /// <summary>
     /// The two sweeps of the Arrow mode. First the arrow swings from one edge of its sector to the other and back,
     /// starting at the left edge (the lower yaw). Then the landing point runs along the arrow from the shortest range to
-    /// the longest and back. The shot is the biggest at the shortest range and the smallest at the longest.
+    /// the longest and back.
     /// </summary>
     public sealed class ArrowSwing
     {
@@ -34,8 +34,5 @@ namespace SelfBulletting.Gameplay.Aim
         /// <param name="elapsedSeconds">Time since the direction was fixed.</param>
         public float GetRangeShare(float elapsedSeconds) =>
             Mathf.PingPong(elapsedSeconds / _settings.RangeHalfPeriodSeconds, 1f);
-
-        /// <summary>The shot size for a range: the aim scale value, 1 at the shortest range and 0 at the longest.</summary>
-        public static float GetSizeScale(float rangeShare) => 1f - Mathf.Clamp01(rangeShare);
     }
 }

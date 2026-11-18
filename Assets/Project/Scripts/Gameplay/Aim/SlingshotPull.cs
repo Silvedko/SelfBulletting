@@ -1,4 +1,5 @@
 using SelfBulletting.Configs;
+using SelfBulletting.Gameplay.Presentation;
 using UnityEngine;
 
 namespace SelfBulletting.Gameplay.Aim
@@ -31,6 +32,30 @@ namespace SelfBulletting.Gameplay.Aim
             }
 
             rangeShare = Mathf.InverseLerp(_settings.DeadZoneScreenShare, _settings.FullPullScreenShare, pull);
+            return true;
+        }
+
+        /// <summary>
+        /// The whole slingshot aim for one frame: the range share from the pull on the screen, the direction from the pull
+        /// projected on the ground. Keeps the last direction when the camera ray misses the ground for a frame.
+        /// </summary>
+        /// <param name="direction">The last direction in, the new one out.</param>
+        /// <returns>False while the pull is inside the dead zone.</returns>
+        public bool TryAim(IScreenToGround screen, Vector2 pressPoint, Vector2 currentPoint, ref Vector3 direction,
+            out float rangeShare)
+        {
+            if (!TryGetRangeShare(pressPoint, currentPoint, screen.ScreenHeight, out rangeShare))
+            {
+                return false;
+            }
+
+            if (screen.TryGetGroundPoint(pressPoint, out Vector3 pressGround)
+                && screen.TryGetGroundPoint(currentPoint, out Vector3 currentGround)
+                && TryGetDirection(pressGround, currentGround, out Vector3 pulled))
+            {
+                direction = pulled;
+            }
+
             return true;
         }
 

@@ -1,47 +1,42 @@
 using SelfBulletting.Configs;
+using SelfBulletting.Gameplay.Ball;
 using UnityEngine;
 
 namespace SelfBulletting.Gameplay.Shot
 {
     /// <summary>
     /// Prices and power of shots. Sizes are percents of the start radius R0 unless a name says "World" (meters).
-    /// The ball never gets below the critical size, which equals the cost of the minimum shot.
+    /// The ball never gets below the critical size, which in the shooting modes equals the cost of the minimum shot.
     /// </summary>
     public sealed class ShotEconomy
     {
-        private const float FullSizePercent = 100f;
         private const float Tolerance = 0.001f;
 
+        private readonly BallLimits _limits;
         private readonly ShotSettings _shot;
-        private readonly float _startRadius;
 
-        public ShotEconomy(BallSettings ball, ShotSettings shot)
+        /// <param name="limits">Built with the cost of the minimum shot as the critical size.</param>
+        public ShotEconomy(BallLimits limits, ShotSettings shot)
         {
-            _startRadius = ball.StartRadius;
+            _limits = limits;
             _shot = shot;
         }
 
-        public float CriticalPercent => _shot.MinShootPercent;
         public float ShotSpeed => _shot.ShotSpeed;
 
-        public float ToWorldRadius(float percent) => _startRadius * percent / FullSizePercent;
+        public float ToWorldRadius(float percent) => _limits.ToWorldRadius(percent);
 
         /// <summary>What the ball can still spend without getting below the critical size.</summary>
-        public float GetRemainder(float radiusPercent) => Mathf.Max(0f, radiusPercent - _shot.MinShootPercent);
-
-        /// <summary>The remainder as a share of the full ball: 1 at full size, 0 at the critical size.</summary>
-        public float GetHealth(float radiusPercent) =>
-            Mathf.Clamp01(GetRemainder(radiusPercent) / (FullSizePercent - _shot.MinShootPercent));
+        public float GetRemainder(float radiusPercent) => _limits.GetRemainder(radiusPercent);
 
         public ShotMode GetShotMode(float radiusPercent)
         {
-            float remainder = GetRemainder(radiusPercent);
-            if (remainder <= Tolerance)
+            if (!_limits.HasRemainder(radiusPercent))
             {
                 return ShotMode.None;
             }
 
-            return remainder > _shot.MinShootPercent + Tolerance ? ShotMode.Aimed : ShotMode.Instant;
+            return GetRemainder(radiusPercent) > _shot.MinShootPercent + Tolerance ? ShotMode.Aimed : ShotMode.Instant;
         }
 
         /// <summary>
@@ -72,6 +67,19 @@ namespace SelfBulletting.Gameplay.Shot
             float clampedScale = Mathf.Clamp(scale, 0f, GetScaleLimit(radiusPercent));
             float cost = Mathf.Min(GetCostPercent(clampedScale), GetRemainder(radiusPercent));
             return new ShotRequest(cost, GetDamageWorldRadius(clampedScale), clampedScale);
+        }
+
+        /// <summary>
+        /// Arrow mode: a shot without the scale, with a fixed cost and a fixed damage radius. The cost is never below the
+        /// minimum shot and never above what the ball can spend, so with less left the shot takes everything above the
+        /// critical size.
+        /// </summary>
+        /// <param name="costPercent">The fixed cost, % of R0.</param>
+        /// <param name="damageRadiusPercent">The fixed damage radius, % of R0.</param>
+        public ShotRequest CreateFixedShot(float radiusPercent, float costPercent, float damageRadiusPercent)
+        {
+            float cost = Mathf.Min(Mathf.Max(costPercent, _shot.MinShootPercent), GetRemainder(radiusPercent));
+            return new ShotRequest(cost, ToWorldRadius(damageRadiusPercent), 0f);
         }
 
         /// <summary>The last shot without the scale: everything above the critical size, with the minimum damage radius.</summary>

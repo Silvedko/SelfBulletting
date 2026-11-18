@@ -100,3 +100,15 @@ MonoBehaviour:
     _pitchVariation: 0
     _maxVoices: 1
     _minIntervalSeconds: 0
+  - _id: 14
+    _clip: {fileID: 8300000, guid: a1c4ce6e99610d54cb421bd7694d90e0, type: 3}
+    _volume: 0.5
+    _pitchVariation: 0
+    _maxVoices: 1
+    _minIntervalSeconds: 0
+  - _id: 15
+    _clip: {fileID: 0}
+    _volume: 0.35
+    _pitchVariation: 0.15
+    _maxVoices: 3
+    _minIntervalSeconds: 0.05

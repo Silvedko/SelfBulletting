@@ -9,6 +9,10 @@ namespace SelfBulletting.Gameplay.Presentation.Null
         {
         }
 
+        public void ShowWetted(float share)
+        {
+        }
+
         public void SetHighlighted(bool isHighlighted)
         {
         }

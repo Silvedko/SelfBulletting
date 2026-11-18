@@ -11,14 +11,16 @@ namespace SelfBulletting.Gameplay.Aim
 {
     /// <summary>
     /// Arrow mode, two taps. The arrow next to the ball swings by itself; the first tap fixes the direction. Then the
-    /// landing point runs along the arrow back and forth; the second tap fires there. The size follows the range:
-    /// the biggest affordable shot at the shortest range, the minimum shot at the longest, so a far target is cheap but
-    /// weak. The last shot keeps its size (everything left), only the range is chosen.
+    /// landing point runs along the arrow back and forth; the second tap fires there. There is no power scale: every
+    /// shot has the same cost and the same damage radius, only the direction and the range are chosen. The last shot
+    /// takes everything left with the minimum radius.
     /// </summary>
     public sealed class ArrowAimController : IShotAiming
     {
         private readonly IInputService _input;
         private readonly ArrowSwing _swing;
+        private readonly float _shotCostPercent;
+        private readonly float _damageRadiusPercent;
         private readonly ShotEconomy _economy;
         private readonly BallModel _ball;
         private readonly LobPreview _preview;
@@ -26,11 +28,16 @@ namespace SelfBulletting.Gameplay.Aim
         private readonly GameViews _views;
         private readonly IAudioService _audio;
 
-        public ArrowAimController(IInputService input, ArrowSwing swing, ShotEconomy economy, BallModel ball,
-            LobPreview preview, Vector3 ballGroundPoint, GameViews views, IAudioService audio)
+        /// <param name="shotCostPercent">What every shot costs, % of R0.</param>
+        /// <param name="damageRadiusPercent">Damage radius of every shot, % of R0.</param>
+        public ArrowAimController(IInputService input, ArrowSwing swing, float shotCostPercent, float damageRadiusPercent,
+            ShotEconomy economy, BallModel ball, LobPreview preview, Vector3 ballGroundPoint, GameViews views,
+            IAudioService audio)
         {
             _input = input;
             _swing = swing;
+            _shotCostPercent = shotCostPercent;
+            _damageRadiusPercent = damageRadiusPercent;
             _economy = economy;
             _ball = ball;
             _preview = preview;
@@ -83,15 +90,13 @@ namespace SelfBulletting.Gameplay.Aim
         // The tap that fixed the direction is never read as the second one: the check runs from the next frame on.
         private async UniTask<FiredShot> ChooseRangeAsync(Vector3 direction, bool isInstant, CancellationToken cancellationToken)
         {
-            float limit = _economy.GetScaleLimit(_ball.RadiusPercent);
+            // Cost and radius stay the same while the landing point runs, so the shot is made once.
+            ShotRequest request = isInstant
+                ? _economy.CreateInstantShot(_ball.RadiusPercent)
+                : _economy.CreateFixedShot(_ball.RadiusPercent, _shotCostPercent, _damageRadiusPercent);
             float elapsedSeconds = 0f;
-            FiredShot shot = ShowPreview(direction, isInstant, elapsedSeconds, limit);
-
-            if (!isInstant)
-            {
-                _views.Aim.ShowScale();
-                _audio.StartLoop(SoundId.AimCharge);
-            }
+            FiredShot shot = ShowPreview(request, direction, elapsedSeconds);
+            _audio.StartLoop(SoundId.AimCharge);
 
             try
             {
@@ -104,7 +109,7 @@ namespace SelfBulletting.Gameplay.Aim
                         return shot;
                     }
 
-                    shot = ShowPreview(direction, isInstant, elapsedSeconds, limit);
+                    shot = ShowPreview(request, direction, elapsedSeconds);
                 }
             }
             finally
@@ -115,19 +120,10 @@ namespace SelfBulletting.Gameplay.Aim
             }
         }
 
-        private FiredShot ShowPreview(Vector3 direction, bool isInstant, float elapsedSeconds, float limit)
+        private FiredShot ShowPreview(ShotRequest request, Vector3 direction, float elapsedSeconds)
         {
             _views.LobAim.ShowArrow(_ballGroundPoint, _ball.WorldRadius, direction);
-            float rangeShare = _swing.GetRangeShare(elapsedSeconds);
-            if (isInstant)
-            {
-                return _preview.Show(_economy.CreateInstantShot(_ball.RadiusPercent), direction, rangeShare);
-            }
-
-            // Near ranges ask for more than a small ball can afford; the economy cuts them to the biggest affordable shot.
-            ShotRequest request = _economy.CreateAimedShot(_ball.RadiusPercent, ArrowSwing.GetSizeScale(rangeShare));
-            _views.Aim.SetScale(request.Scale, limit);
-            return _preview.Show(request, direction, rangeShare);
+            return _preview.Show(request, direction, _swing.GetRangeShare(elapsedSeconds));
         }
     }
 }

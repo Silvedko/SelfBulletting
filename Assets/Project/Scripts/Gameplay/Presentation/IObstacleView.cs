@@ -11,6 +11,12 @@ namespace SelfBulletting.Gameplay.Presentation
         /// <summary>The obstacle caught the infection (in the reference it turns the player's orange).</summary>
         void ShowInfected();
 
+        /// <summary>
+        /// Hose: a drop hit the fire but it needs more hits to go out. The water climbs the flame by that share.
+        /// </summary>
+        /// <param name="share">How much of the fire is put out, below 1.</param>
+        void ShowWetted(float share);
+
         /// <summary>Aim modes: the obstacle lies inside the damage ring of the shot being aimed.</summary>
         void SetHighlighted(bool isHighlighted);
 

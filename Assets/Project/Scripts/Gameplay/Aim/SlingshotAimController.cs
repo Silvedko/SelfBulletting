@@ -90,7 +90,7 @@ namespace SelfBulletting.Gameplay.Aim
                 while (_input.IsPressed)
                 {
                     ShotRequest request = CreateRequest(isInstant, elapsedSeconds, limit);
-                    if (TryAim(pressPoint, ref direction, out float rangeShare))
+                    if (_pull.TryAim(_screen, pressPoint, _input.Position, ref direction, out float rangeShare))
                     {
                         shot = _preview.Show(request, direction, rangeShare);
                     }
@@ -129,24 +129,6 @@ namespace SelfBulletting.Gameplay.Aim
             ShotRequest request = _economy.CreateAimedShot(_ball.RadiusPercent, _scale.Evaluate(elapsedSeconds, limit));
             _views.Aim.SetScale(request.Scale, limit);
             return request;
-        }
-
-        // Keeps the last direction when the camera ray misses the ground for a frame.
-        private bool TryAim(Vector2 pressPoint, ref Vector3 direction, out float rangeShare)
-        {
-            if (!_pull.TryGetRangeShare(pressPoint, _input.Position, _screen.ScreenHeight, out rangeShare))
-            {
-                return false;
-            }
-
-            if (_screen.TryGetGroundPoint(pressPoint, out Vector3 pressGround)
-                && _screen.TryGetGroundPoint(_input.Position, out Vector3 currentGround)
-                && SlingshotPull.TryGetDirection(pressGround, currentGround, out Vector3 pulled))
-            {
-                direction = pulled;
-            }
-
-            return true;
         }
     }
 }

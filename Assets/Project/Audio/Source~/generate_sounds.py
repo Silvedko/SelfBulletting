@@ -360,6 +360,53 @@ def lose():
     return buffer
 
 
+HOSE_SEED = 7
+HOSE_LOOP_SECONDS = 3.0
+HOSE_DROPLET_COUNT = 40
+
+
+def shaped_noise(sample_count, gain_of_frequency, rng):
+    """Circular noise with any spectrum, so it loops seamlessly like band_noise."""
+    spectrum = np.fft.rfft(rng.standard_normal(sample_count))
+    frequencies = np.fft.rfftfreq(sample_count, 1.0 / SAMPLE_RATE)
+    noise = np.fft.irfft(spectrum * gain_of_frequency(frequencies), sample_count)
+    return noise / np.max(np.abs(noise))
+
+
+def log_band(frequencies, centre_hz, width_octaves):
+    """Smooth bell-shaped gain around centre_hz on a log-frequency scale."""
+    octaves = np.log2(np.maximum(frequencies, 1.0) / centre_hz)
+    return np.exp(-0.5 * (octaves / width_octaves) ** 2)
+
+
+def place_circular(buffer, sound, start_index):
+    """Adds sound at start_index and wraps it past the end, so a loop stays seamless."""
+    indices = (start_index + np.arange(len(sound))) % len(buffer)
+    np.add.at(buffer, indices, sound)
+
+
+def hose_stream():
+    """Seamless three-second loop of a water jet: bright spray hiss over a low rush, slow turbulence
+    and scattered droplet plips. Noise is circular, every modulation makes a whole number of cycles
+    in the loop and droplets wrap around its end. Uses its own RNG, so the other clips never change."""
+    rng = np.random.default_rng(HOSE_SEED)
+    t = timeline(HOSE_LOOP_SECONDS)
+
+    spray = shaped_noise(len(t), lambda f: log_band(f, 2500, 0.85), rng)
+    rush = shaped_noise(len(t), lambda f: log_band(f, 400, 1.0), rng)
+    flutter = 1 + 0.15 * shaped_noise(len(t), lambda f: (f > 0) & (f < 12), rng)
+    turbulence = 1 + 0.1 * sine(1.0, t) + 0.07 * sine(7 / 3, t, 1.3) + 0.05 * sine(11 / 3, t, 2.1)
+
+    droplets = np.zeros(len(t))
+    plip_time = timeline(0.03)
+    for start in rng.uniform(0, HOSE_LOOP_SECONDS, HOSE_DROPLET_COUNT):
+        frequency = rng.uniform(1500, 4000)
+        plip = sweep(frequency, frequency * 1.6, plip_time, 0.02) * decay(plip_time, 0.001, 0.008)
+        place_circular(droplets, rng.uniform(0.3, 1.0) * plip, int(start * SAMPLE_RATE))
+
+    return 0.7 * spray * turbulence * flutter + 0.35 * rush * turbulence + 0.12 * droplets
+
+
 SOUNDS = {
     "UiClick": (ui_click, False),
     "AimCharge": (aim_charge, True),
@@ -375,6 +422,7 @@ SOUNDS = {
     "Lose": (lose, False),
     "ComboBig": (combo_big, False),
     "ComboHuge": (combo_huge, False),
+    "HoseStream": (hose_stream, True),
 }
 
 

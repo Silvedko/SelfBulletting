@@ -7,7 +7,7 @@ namespace SelfBulletting.Gameplay.Levels
 {
     /// <summary>
     /// Which levels every game mode plays and where the player is in each. Classic plays its own catalog (one level);
-    /// the aim modes share the catalog of curved levels, each with its own progress.
+    /// Slingshot, Arrow and Hose share the catalog of curved levels, each with its own progress.
     /// </summary>
     public sealed class ModeLevels
     {
@@ -32,6 +32,6 @@ namespace SelfBulletting.Gameplay.Levels
 
         public Level GetCurrentLevel(GameMode mode) => GetCatalog(mode).Get(GetProgress(mode).CurrentIndex);
 
-        private LevelCatalog GetCatalog(GameMode mode) => mode.IsAimed() ? _curved : _classic;
+        private LevelCatalog GetCatalog(GameMode mode) => mode.UsesCurvedPath() ? _curved : _classic;
     }
 }

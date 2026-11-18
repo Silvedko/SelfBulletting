@@ -14,7 +14,8 @@ namespace SelfBulletting.UI.Final
 {
     /// <summary>
     /// Overlay shown on top of the frozen Game scene when a round ends. The title pops in, then the score
-    /// counts up line by line: destroyed obstacles → combo bonus → ball bonus → total. The buttons unlock when the count ends.
+    /// counts up line by line: destroyed obstacles → combo bonus → ball bonus → total. A mode without combo (the Hose)
+    /// leaves the combo line out. The buttons unlock when the count ends.
     /// </summary>
     public sealed class FinalScreen : MonoBehaviour
     {
@@ -35,6 +36,9 @@ namespace SelfBulletting.UI.Final
         [Tooltip("{0} — destroyed obstacles, {1} — combo bonus, {2} — bonus for the ball left, {3} — total score.")]
         [SerializeField] private string _summaryFormat = "Obstacles: {0}\nCombo bonus: +{1}\nBall bonus: +{2}\nScore: {3}";
 
+        [Tooltip("The same for a mode without combo. {0} — destroyed obstacles, {2} — bonus for the ball left, {3} — total score.")]
+        [SerializeField] private string _summaryWithoutComboFormat = "Obstacles: {0}\nBall bonus: +{2}\nScore: {3}";
+
         [Tooltip("How long one line of the score counts up, seconds.")]
         [SerializeField, Min(0f)] private float _countSecondsPerLine = 0.6f;
 
@@ -42,6 +46,8 @@ namespace SelfBulletting.UI.Final
 
         public event Action PlayRequested;
         public event Action MenuRequested;
+
+        private bool _hasCombo = true;
 
         public void Hide()
         {
@@ -53,6 +59,7 @@ namespace SelfBulletting.UI.Final
             _titleText.text = result.IsWin ? _winTitle : _loseTitle;
             _playButtonLabel.text = result.IsWin ? _nextLabel : _retryLabel;
             SetButtonsInteractable(false);
+            _hasCombo = result.Score.HasCombo;
             ShowScore(0, 0, 0, 0);
             gameObject.SetActive(true);
 
@@ -80,7 +87,11 @@ namespace SelfBulletting.UI.Final
         {
             await PopTitleAsync(cancellationToken);
             await CountAsync(value => ShowScore(value, 0, 0, 0), score.DestroyedObstacles, cancellationToken);
-            await CountAsync(value => ShowScore(score.DestroyedObstacles, value, 0, 0), score.ComboBonus, cancellationToken);
+            if (score.HasCombo)
+            {
+                await CountAsync(value => ShowScore(score.DestroyedObstacles, value, 0, 0), score.ComboBonus, cancellationToken);
+            }
+
             await CountAsync(value => ShowScore(score.DestroyedObstacles, score.ComboBonus, value, 0), score.HealthBonus, cancellationToken);
             await CountAsync(value => ShowScore(score.DestroyedObstacles, score.ComboBonus, score.HealthBonus, value),
                 score.Total, cancellationToken);
@@ -117,7 +128,8 @@ namespace SelfBulletting.UI.Final
 
         private void ShowScore(int obstacles, int comboBonus, int healthBonus, int total)
         {
-            _scoreText.text = string.Format(CultureInfo.InvariantCulture, _summaryFormat, obstacles, comboBonus, healthBonus, total);
+            string format = _hasCombo ? _summaryFormat : _summaryWithoutComboFormat;
+            _scoreText.text = string.Format(CultureInfo.InvariantCulture, format, obstacles, comboBonus, healthBonus, total);
         }
 
         private void OnPlayClicked()

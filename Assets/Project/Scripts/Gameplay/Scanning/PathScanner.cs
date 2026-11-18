@@ -7,8 +7,9 @@ namespace SelfBulletting.Gameplay.Scanning
     /// <summary>
     /// Sweeps a sphere of the ball size along the path to the finish, segment by segment, at the height of the ball centre.
     /// The first obstacle along the path is what blocks the ball; in Classic the next shot also flies into it.
+    /// The same sweep moves the Hose drops along their arcs.
     /// </summary>
-    public sealed class PathScanner
+    public sealed class PathScanner : IObstacleSweep
     {
         private readonly RaycastHit[] _hits;
         private readonly int _obstacleMask;
@@ -76,6 +77,20 @@ namespace SelfBulletting.Gameplay.Scanning
                 firstHit.point = firstHit.collider.ClosestPoint(from);
             }
 
+            return true;
+        }
+
+        public bool TrySweep(Vector3 from, Vector3 to, float radius, out Vector3 contactCenter, out Collider obstacle)
+        {
+            if (!TryFindFirstObstacle(from, to, radius, out RaycastHit hit))
+            {
+                contactCenter = to;
+                obstacle = null;
+                return false;
+            }
+
+            contactCenter = from + (to - from).normalized * hit.distance;
+            obstacle = hit.collider;
             return true;
         }
 

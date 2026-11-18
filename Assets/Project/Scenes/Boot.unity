@@ -508,6 +508,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: SelfBulletting.Runtime::SelfBulletting.Infrastructure.Bootstrap
   _settings: {fileID: 11400000, guid: 76e6e3f7755a74c4f9cb0171e11096af, type: 2}
+  _modeConfigs:
+  - {fileID: 11400000, guid: dedc6d32a0c1458a9833871aee41953e, type: 2}
+  - {fileID: 11400000, guid: f30a1596299e4be5905050015eabd74b, type: 2}
+  - {fileID: 11400000, guid: 55c1c5da9ec247a39eb7b1e1bea8451b, type: 2}
+  - {fileID: 11400000, guid: b17a23be90a746f88f1a18acf1dfceb4, type: 2}
   _loadingCurtain: {fileID: 27236226}
   _soundLibrary: {fileID: 11400000, guid: 65dc04d2294b4f1479454c156618b50f, type: 2}
   _levelCatalog: {fileID: 11400000, guid: 678b6952649b9944ca2a838fbe3fe542, type: 2}

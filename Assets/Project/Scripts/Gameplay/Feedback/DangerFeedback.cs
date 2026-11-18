@@ -6,8 +6,8 @@ using UnityEngine;
 namespace SelfBulletting.Gameplay.Feedback
 {
     /// <summary>
-    /// Warns while the previewed ball size is in the warning zone: vibration pulses get more frequent
-    /// towards the critical size. The danger level (0..1) also drives the pulsing of the ball and the path.
+    /// Warns while the previewed ball size (in the Hose mode, the real one while the water flows) is in the warning
+    /// zone: vibration pulses get more frequent towards the critical size. The danger level (0..1) also drives the pulsing of the ball and the path.
     /// </summary>
     public sealed class DangerFeedback
     {
@@ -21,10 +21,11 @@ namespace SelfBulletting.Gameplay.Feedback
         private float _secondsSincePulse;
         private bool _isWarning;
 
-        public DangerFeedback(FeedbackSettings feedback, ShotSettings shot, IVibrationService vibration, IAudioService audio)
+        /// <param name="criticalPercent">The critical ball size of the mode, % of R0: the danger is full there.</param>
+        public DangerFeedback(FeedbackSettings feedback, float criticalPercent, IVibrationService vibration, IAudioService audio)
         {
             _feedback = feedback;
-            _criticalPercent = shot.MinShootPercent;
+            _criticalPercent = criticalPercent;
             _vibration = vibration;
             _audio = audio;
         }
@@ -43,7 +44,7 @@ namespace SelfBulletting.Gameplay.Feedback
         public float GetPulseIntervalSeconds(float dangerLevel) =>
             Mathf.Lerp(_feedback.VibrationIntervalMaxMs, _feedback.VibrationIntervalMinMs, dangerLevel) / MillisecondsPerSecond;
 
-        /// <summary>Call every frame while aiming. Returns the current danger level.</summary>
+        /// <summary>Call every frame while aiming or pouring. Returns the current danger level.</summary>
         public float Tick(float previewPercent, float deltaTime)
         {
             float dangerLevel = GetDangerLevel(previewPercent);
