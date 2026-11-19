@@ -79,6 +79,8 @@ sysinfo.txt
 mono_crash.*
 
 # Builds
+# Burst writes its web build output to Data/ in the project root
+/[Dd]ata/
 *.apk
 *.aab
 *.unitypackage

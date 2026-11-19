@@ -77,6 +77,25 @@ namespace SelfBulletting.Tests.Gameplay
             Assert.AreSame(first, hit.collider);
         }
 
+        [Test]
+        public void IsClear_ObstacleReachesTheStripOnlyWithItsEdge_IsClear()
+        {
+            // The box edge is 0.3 m from the axis x = 0, its centre 0.8 m: off the strip.
+            CreateBox(new Vector3(0.8f, 0.5f, 3f));
+
+            Assert.IsTrue(_scanner.IsClear(StraightUpZ(), BallRadius));
+        }
+
+        [Test]
+        public void IsClear_ObstacleBaseOnTheStrip_IsBlocked()
+        {
+            CreateBox(new Vector3(0.4f, 0.5f, 3f));
+
+            Assert.IsFalse(_scanner.IsClear(StraightUpZ(), BallRadius));
+        }
+
+        private static GroundPath StraightUpZ() => GroundPath.Straight(Origin, Origin + new Vector3(0f, 0f, 10f));
+
         private Collider CreateBox(Vector3 offset)
         {
             GameObject box = GameObject.CreatePrimitive(PrimitiveType.Cube);

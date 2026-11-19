@@ -1,15 +1,18 @@
 using System;
 using SelfBulletting.Gameplay.Modes;
+using TMPro;
 using UnityEngine;
 
 namespace SelfBulletting.UI.Menu
 {
     /// <summary>
     /// A button for every game mode; each shows the level and the total score of its mode.
+    /// The game version (Player Settings → Version) is shown at the bottom.
     /// </summary>
     public sealed class MenuScreen : MonoBehaviour
     {
         [SerializeField] private ModeButton[] _modeButtons;
+        [SerializeField] private TMP_Text _versionText;
 
         public event Action<GameMode> PlayRequested;
 
@@ -27,6 +30,11 @@ namespace SelfBulletting.UI.Menu
 
         private void Awake()
         {
+            if (_versionText != null)
+            {
+                _versionText.text = $"v{Application.version}";
+            }
+
             foreach (ModeButton button in _modeButtons)
             {
                 button.Clicked += OnModeClicked;

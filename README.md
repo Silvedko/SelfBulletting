@@ -14,6 +14,23 @@
 - Відкрити проєкт і натиснути **Play** у будь-якій сцені: Play Mode завжди стартує з `Boot` (`Editor/BootSceneOnPlay`).
 - Game View краще перемкнути на портретну роздільність, наприклад 1080×1920.
 - **APK:** Build Profiles → Android → Build, результат — у папку `Builds/` поруч з `Assets` (вона в `.gitignore`, тому APK у репозиторії немає).
+- **У браузері:** https://silvedko.github.io/SelfBulletting/ — як зібрати й оновити, див. нижче.
+
+### Веб-версія (GitHub Pages)
+
+Веб-збірка лежить на гілці `gh-pages`, і її роздає GitHub Pages. На комп'ютері гра йде портретною колонкою 9:16 посеред вікна, на телефоні — на весь екран. Мишею грається так само, як пальцем; вібрації в браузері немає.
+
+1. **Зібрати:** **SelfBulletting → Build → Web (GitHub Pages)**, результат — у `Builds/WebGL`. Потрібен модуль **Web Build Support** для Unity 6000.6.5; якщо його ставили при відкритому редакторі, редактор треба перезапустити. Після збірки активна платформа повертається на ту, що була (Android). Без відкритого редактора те саме робить Unity CLI:
+   ```
+   unity run . -- -executeMethod SelfBulletting.Editor.Build.WebBuild.BuildFromCommandLine
+   ```
+2. **Опублікувати:** скрипт кладе `Builds/WebGL` на `gh-pages` (першого разу створює гілку без історії `main`), комітить і пушить; з `-NoPush` — лише локальний коміт. Поточна гілка й робоча копія не змінюються.
+   ```
+   powershell -ExecutionPolicy Bypass -File tools/deploy-gh-pages.ps1
+   ```
+3. **Один раз на GitHub:** Settings → Pages → Build and deployment → Source: *Deploy from a branch*, гілка `gh-pages`, папка `/ (root)`. Сайт оновлюється за хвилину-дві після кожного пушу.
+
+GitHub Pages не вміє віддавати заголовок `Content-Encoding`, тож збірка стиснута gzip з *decompression fallback*: браузер розпаковує файли сам. Імена файлів — хеші, щоб після оновлення браузер не змішав старі файли з кешу з новими. Ці налаштування виставляє `Editor/Build/WebBuild.cs`, сторінку дає шаблон `Assets/WebGLTemplates/Portrait`. У браузері частоту кадрів задає сам браузер, тож `Application.TargetFrameRate` там не застосовується.
 
 ## Як грати
 
@@ -109,7 +126,7 @@ Assets/Project/
   Scripts/Gameplay/                логіка раунду і контракти відображення
   Scripts/Views/                   реалізації відображення
   Scripts/UI/                      шторка, меню, фінальний екран
-  Editor/                          старт Play Mode з Boot, генератор рівня і кривої
+  Editor/                          старт Play Mode з Boot, генератор рівня і кривої, веб-збірка
   Tests/EditMode/                  тести
 ```
 

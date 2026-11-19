@@ -98,6 +98,15 @@ namespace SelfBulletting.Tests.Gameplay
             Assert.Greater(path.FinishDirection.x, 0.9f);
         }
 
+        [Test]
+        public void FlatDistanceTo_MeasuresToTheNearestSegmentOnTheGround()
+        {
+            GroundPath path = GroundPath.Straight(Vector3.zero, new Vector3(0f, 0f, 10f));
+
+            Assert.AreEqual(2f, path.FlatDistanceTo(new Vector3(2f, 5f, 4f)), Tolerance);
+            Assert.AreEqual(5f, path.FlatDistanceTo(new Vector3(3f, 0f, 14f)), Tolerance);
+        }
+
         private static float DistanceToPolyline(IReadOnlyList<Vector3> points, Vector3 target)
         {
             float best = float.MaxValue;

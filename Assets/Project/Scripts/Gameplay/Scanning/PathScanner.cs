@@ -24,14 +24,19 @@ namespace SelfBulletting.Gameplay.Scanning
 
         public bool IsClear(GroundPath path, float radius) => !TryFindFirstObstacle(path, radius, out _);
 
-        /// <summary>The first obstacle along the path: segments are swept in order, the nearest hit of the first blocked one wins.</summary>
+        /// <summary>
+        /// The first obstacle that stands on the strip: its base (the centre of its collider on the ground) is closer to
+        /// the path than the ball radius. An obstacle that only reaches the strip with its edge does not block the ball,
+        /// so a fire left beside the narrowed strip after the ball shrank does not have to be put out.
+        /// Segments are swept in order, the nearest such hit of the first blocked one wins.
+        /// </summary>
         /// <param name="radius">Ball radius; the sphere is lifted by it, so it touches the ground like the ball does.</param>
         public bool TryFindFirstObstacle(GroundPath path, float radius, out RaycastHit firstHit)
         {
             Vector3 lift = Vector3.up * radius;
             for (int i = 1; i < path.Points.Count; i++)
             {
-                if (TryFindFirstObstacle(path.Points[i - 1] + lift, path.Points[i] + lift, radius, out firstHit))
+                if (TryFindFirstObstacle(path.Points[i - 1] + lift, path.Points[i] + lift, radius, out firstHit, path))
                 {
                     return true;
                 }
@@ -41,7 +46,11 @@ namespace SelfBulletting.Gameplay.Scanning
             return false;
         }
 
-        public bool TryFindFirstObstacle(Vector3 from, Vector3 to, float radius, out RaycastHit firstHit)
+        public bool TryFindFirstObstacle(Vector3 from, Vector3 to, float radius, out RaycastHit firstHit) =>
+            TryFindFirstObstacle(from, to, radius, out firstHit, null);
+
+        /// <param name="strip">When set, only obstacles standing on this path's strip of half-width <paramref name="radius"/> count.</param>
+        private bool TryFindFirstObstacle(Vector3 from, Vector3 to, float radius, out RaycastHit firstHit, GroundPath strip)
         {
             firstHit = default;
             Vector3 offset = to - from;
@@ -58,6 +67,11 @@ namespace SelfBulletting.Gameplay.Scanning
             int nearest = -1;
             for (int i = 0; i < count; i++)
             {
+                if (strip != null && strip.FlatDistanceTo(_hits[i].collider.bounds.center) >= radius)
+                {
+                    continue;
+                }
+
                 if (nearest < 0 || _hits[i].distance < _hits[nearest].distance)
                 {
                     nearest = i;

@@ -42,7 +42,10 @@ namespace SelfBulletting.Infrastructure
 
         private void Awake()
         {
+            // On the web the browser paces frames (requestAnimationFrame); a fixed rate there only adds judder.
+#if !UNITY_WEBGL || UNITY_EDITOR
             Application.targetFrameRate = _settings.Application.TargetFrameRate;
+#endif
             _loadingCurtain.Construct(_settings.Loading);
 
             var sceneLoader = new SceneLoader();

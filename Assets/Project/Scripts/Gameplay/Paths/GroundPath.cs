@@ -70,6 +70,24 @@ namespace SelfBulletting.Gameplay.Paths
             return Finish;
         }
 
+        /// <summary>Distance on the ground (XZ) from the point to the nearest point of the path.</summary>
+        public float FlatDistanceTo(Vector3 point)
+        {
+            var target = new Vector2(point.x, point.z);
+            float nearest = float.MaxValue;
+            for (int i = 1; i < _points.Length; i++)
+            {
+                var from = new Vector2(_points[i - 1].x, _points[i - 1].z);
+                var to = new Vector2(_points[i].x, _points[i].z);
+                Vector2 segment = to - from;
+                float lengthSquared = segment.sqrMagnitude;
+                float share = lengthSquared > Mathf.Epsilon ? Mathf.Clamp01(Vector2.Dot(target - from, segment) / lengthSquared) : 0f;
+                nearest = Mathf.Min(nearest, Vector2.Distance(target, from + segment * share));
+            }
+
+            return nearest;
+        }
+
         private static Vector3 Flat(Vector3 vector)
         {
             vector.y = 0f;

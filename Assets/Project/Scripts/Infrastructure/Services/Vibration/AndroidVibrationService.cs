@@ -1,3 +1,5 @@
+// Android only: Handheld does not exist on the web, and Bootstrap creates this service only on a device.
+#if UNITY_ANDROID
 using System;
 using UnityEngine;
 
@@ -50,3 +52,4 @@ namespace SelfBulletting.Infrastructure.Services.Vibration
         }
     }
 }
+#endif

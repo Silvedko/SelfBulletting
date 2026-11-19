@@ -129,7 +129,17 @@ namespace SelfBulletting.Views.Path
             _mesh.vertices = _vertices;
             _mesh.uv = uvs;
             _mesh.triangles = triangles;
-            _mesh.RecalculateNormals();
+
+            // The strip is flat on the ground. RecalculateNormals here would see only zero vertices (ApplyWidth
+            // places them later) and give zero normals.
+            var normals = new Vector3[count * 2];
+            Vector3 up = _meshFilter.transform.InverseTransformDirection(Vector3.up);
+            for (int i = 0; i < normals.Length; i++)
+            {
+                normals[i] = up;
+            }
+
+            _mesh.normals = normals;
         }
 
         private void ApplyWidth()
