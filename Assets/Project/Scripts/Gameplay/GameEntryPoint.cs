@@ -70,7 +70,7 @@ namespace SelfBulletting.Gameplay
 
             var pathScanner = new PathScanner(settings.Physics);
             var pathCheck = new PathCheck(path, pathScanner, _ball);
-            var score = new ScoreCounter(mode.Score, mode.Combo);
+            var score = new ScoreCounter(mode.Score, mode.Combo, dependencies.Bonus.HasExtinguishBonus(mode.Mode));
             var danger = new DangerFeedback(mode.Feedback, mode.CriticalPercent, dependencies.Vibration, dependencies.Audio);
             IScreenToGround screen = Resolve<IScreenToGround>(_screenToGround) ?? new NullScreenToGround();
             var strategies = new ShotStrategyFactory(dependencies, screen, _level, _ball, limits, pathScanner,

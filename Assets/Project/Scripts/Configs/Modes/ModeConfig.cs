@@ -23,6 +23,9 @@ namespace SelfBulletting.Configs.Modes
         /// <summary>Combo tiers of the mode; none unless the mode shoots.</summary>
         public virtual ComboSettings Combo => ComboSettings.None;
 
+        /// <summary>Bonus for fires put out together; none unless the mode puts fires out one by one (the Hose).</summary>
+        public virtual ExtinguishBonusSettings ExtinguishBonus => ExtinguishBonusSettings.None;
+
         protected virtual void OnValidate()
         {
             _feedback.Validate(CriticalPercent);

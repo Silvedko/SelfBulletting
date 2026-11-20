@@ -40,3 +40,12 @@ MonoBehaviour:
   _slingshot:
     _deadZoneScreenShare: 0.05
     _fullPullScreenShare: 0.4
+  _extinguishBonus:
+    _windowMilliseconds: 500
+    _tiers:
+    - _minObstacles: 2
+      _multiplier: 1.5
+    - _minObstacles: 3
+      _multiplier: 2
+    - _minObstacles: 5
+      _multiplier: 3

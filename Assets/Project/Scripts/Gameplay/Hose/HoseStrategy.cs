@@ -20,6 +20,7 @@ namespace SelfBulletting.Gameplay.Hose
     /// stream of drops; lifting the finger stops the water and the next press opens it again at once. The path is checked
     /// after every fire that goes out and whenever the water stops. The turn ends when the way is open or the water has
     /// run out, once the last drops have landed and the last fires have sunk; the round then decides the win.
+    /// Fires put out together within the bonus window earn a bonus on top of their own points.
     /// </summary>
     public sealed class HoseStrategy : IShotStrategy
     {
@@ -29,6 +30,7 @@ namespace SelfBulletting.Gameplay.Hose
         private readonly HoseStream _stream;
         private readonly HosePreview _preview;
         private readonly DropSplash _splash;
+        private readonly ExtinguishBurst _burst;
         private readonly PathCheck _pathCheck;
         private readonly BallModel _ball;
         private readonly DangerFeedback _danger;
@@ -44,16 +46,18 @@ namespace SelfBulletting.Gameplay.Hose
         private bool _isPathClear;
         private bool _hasFireGoneOut;
         private int _shownHealthPercent = NoHealthShown;
+        private float _elapsedSeconds;
 
         /// <param name="groundHeight">World height of the ground: the splashes spread over it.</param>
-        public HoseStrategy(HoseAim aim, HoseStream stream, HosePreview preview, DropSplash splash, PathCheck pathCheck,
-            BallModel ball, DangerFeedback danger, ScoreCounter score, GameViews views, IAudioService audio,
-            float groundHeight)
+        public HoseStrategy(HoseAim aim, HoseStream stream, HosePreview preview, DropSplash splash, ExtinguishBurst burst,
+            PathCheck pathCheck, BallModel ball, DangerFeedback danger, ScoreCounter score, GameViews views,
+            IAudioService audio, float groundHeight)
         {
             _aim = aim;
             _stream = stream;
             _preview = preview;
             _splash = splash;
+            _burst = burst;
             _pathCheck = pathCheck;
             _ball = ball;
             _danger = danger;
@@ -79,6 +83,12 @@ namespace SelfBulletting.Gameplay.Hose
                     Tick(Time.deltaTime);
                     await UniTask.Yield(PlayerLoopTiming.Update, cancellationToken);
                 }
+
+                // The last fires may still be inside the window: they count before the round is decided.
+                if (_burst.TryCloseNow(out ExtinguishBurstResult lastBurst))
+                {
+                    AwardBurst(lastBurst);
+                }
             }
             finally
             {
@@ -91,6 +101,13 @@ namespace SelfBulletting.Gameplay.Hose
 
         private void Tick(float deltaTime)
         {
+            // Closed before the drops fly, so a fire that goes out this frame never joins a burst whose window passed.
+            _elapsedSeconds += deltaTime;
+            if (_burst.TryClose(_elapsedSeconds, out ExtinguishBurstResult burst))
+            {
+                AwardBurst(burst);
+            }
+
             bool isAimed = _aim.TryAim(out Vector3 direction, out float rangeShare);
             if (isAimed && CanPour)
             {
@@ -174,8 +191,18 @@ namespace SelfBulletting.Gameplay.Hose
         {
             _hasFireGoneOut = true;
             _audio.Play(SoundId.Explode);
-            _views.Score.ShowPoints(fire.transform.position, _score.AddObstacle());
+            Vector3 position = fire.transform.position;
+            _views.Score.ShowPoints(position, _score.AddObstacle());
+            _burst.Add(_elapsedSeconds, position);
             SinkAsync(fire).Forget();
+        }
+
+        private void AwardBurst(ExtinguishBurstResult burst)
+        {
+            float multiplier = burst.Tier.Multiplier;
+            int bonus = _score.AddExtinguishBonus(burst.Fires, multiplier);
+            _views.Score.ShowCombo(burst.Center, multiplier, bonus);
+            _audio.Play(ComboSounds.ForLevel(burst.Tier.Level));
         }
 
         // Starts at once, so the fire is out before any other drop of this frame can hit it.

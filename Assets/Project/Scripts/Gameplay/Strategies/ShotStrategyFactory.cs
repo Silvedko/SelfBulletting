@@ -12,6 +12,7 @@ using SelfBulletting.Gameplay.Scanning;
 using SelfBulletting.Gameplay.Score;
 using SelfBulletting.Gameplay.Shot;
 using SelfBulletting.Infrastructure.Services.Audio;
+using SelfBulletting.Infrastructure.Services.Bonus;
 using SelfBulletting.Infrastructure.Services.Input;
 
 namespace SelfBulletting.Gameplay.Strategies
@@ -24,6 +25,7 @@ namespace SelfBulletting.Gameplay.Strategies
     {
         private readonly IInputService _input;
         private readonly IAudioService _audio;
+        private readonly IBonusService _bonus;
         private readonly IScreenToGround _screen;
         private readonly Level _level;
         private readonly BallModel _ball;
@@ -41,6 +43,7 @@ namespace SelfBulletting.Gameplay.Strategies
         {
             _input = dependencies.Input;
             _audio = dependencies.Audio;
+            _bonus = dependencies.Bonus;
             _screen = screen;
             _level = level;
             _ball = ball;
@@ -105,10 +108,11 @@ namespace SelfBulletting.Gameplay.Strategies
             var preview = new HosePreview(_pathScanner, size, CreateHighlight(), _views.LobAim, hose.PreviewSegments);
             var splash = new DropSplash(_obstacleScanner, _level, size, new HitCounter<Obstacle>(hose.HitsToExtinguish));
             var aim = new HoseAim(_input, _screen, new SlingshotPull(config.Slingshot));
+            var burst = new ExtinguishBurst(_bonus, config.Mode);
 
             _views.Hose.Prepare(hose.MaxDropsInFlight);
-            return new HoseStrategy(aim, stream, preview, splash, _pathCheck, _ball, _danger, _score, _views, _audio,
-                _level.StartPoint.y);
+            return new HoseStrategy(aim, stream, preview, splash, burst, _pathCheck, _ball, _danger, _score, _views,
+                _audio, _level.StartPoint.y);
         }
 
         private IShotStrategy CreateReleasedShot(ShotModeConfig config, ShotEconomy economy, IShotAiming aim)

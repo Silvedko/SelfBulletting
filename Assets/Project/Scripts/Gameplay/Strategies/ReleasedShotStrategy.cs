@@ -19,8 +19,6 @@ namespace SelfBulletting.Gameplay.Strategies
     /// </summary>
     public sealed class ReleasedShotStrategy : IShotStrategy
     {
-        private static readonly SoundId[] _comboSounds = { SoundId.Combo, SoundId.ComboBig, SoundId.ComboHuge };
-
         private readonly Level _level;
         private readonly BallModel _ball;
         private readonly ShotEconomy _economy;
@@ -85,11 +83,7 @@ namespace SelfBulletting.Gameplay.Strategies
             }
 
             _views.Score.ShowCombo(impactPoint, shotScore.Multiplier, shotScore.ComboBonus);
-            _audio.Play(GetComboSound(shotScore.ComboLevel));
+            _audio.Play(ComboSounds.ForLevel(shotScore.ComboLevel));
         }
-
-        // The bigger the combo, the brighter the sound; tiers above the last sound reuse the brightest one.
-        private static SoundId GetComboSound(int comboLevel) =>
-            _comboSounds[Mathf.Clamp(comboLevel - 1, 0, _comboSounds.Length - 1)];
     }
 }

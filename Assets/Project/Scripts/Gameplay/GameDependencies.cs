@@ -1,5 +1,6 @@
 using SelfBulletting.Configs;
 using SelfBulletting.Infrastructure.Services.Audio;
+using SelfBulletting.Infrastructure.Services.Bonus;
 using SelfBulletting.Infrastructure.Services.Input;
 using SelfBulletting.Infrastructure.Services.Vibration;
 
@@ -10,17 +11,20 @@ namespace SelfBulletting.Gameplay
     /// </summary>
     public sealed class GameDependencies
     {
-        public GameDependencies(SettingsConfig settings, IInputService input, IVibrationService vibration, IAudioService audio)
+        public GameDependencies(SettingsConfig settings, IInputService input, IVibrationService vibration, IAudioService audio,
+            IBonusService bonus)
         {
             Settings = settings;
             Input = input;
             Vibration = vibration;
             Audio = audio;
+            Bonus = bonus;
         }
 
         public SettingsConfig Settings { get; }
         public IInputService Input { get; }
         public IVibrationService Vibration { get; }
         public IAudioService Audio { get; }
+        public IBonusService Bonus { get; }
     }
 }

@@ -178,7 +178,8 @@
 **Очки**
 
 - `Score.PointsPerObstacle` (10) за кожне згасле вогнище, «+10» над ним.
-- Комбо немає, тож рядка «Combo bonus» на фінальному екрані Шланга немає.
+- Комбо за постріл немає. Замість нього — **бонус за одночасне гасіння** (`ExtinguishBonus`): перше згасле вогнище відкриває серію, і кожне, що згасло протягом `ExtinguishBonus.WindowMilliseconds` (300 мс) від першого, додається до неї. Коли вікно минуло (або хід скінчився), серія закривається, і найвищий досягнутий поріг множить її очки: 2 вогнища → ×1,5, 3 → ×2, 5 → ×3. Базові «+10» кожне вогнище вже дало, тож бонус — те, що множник додає зверху: `вогнища × PointsPerObstacle × (множник − 1)`. Біля середини серії — «КОМБО ×N +бонус» і звук комбо за рівнем порогу. Вогнище, що згасло вже після вікна, відкриває нову серію.
+- Бонус іде в той самий рядок «Combo bonus» фінального екрана; без порогів (`ExtinguishBonus.Tiers` порожній) рядка немає.
 - Бонус за залишок — `Score.PointsPerRemainingPercent` Шланга: 100 за кожен відсоток понад критичний розмір (у решті режимів 30). Секунда води коштує 2%, тобто 200 очок бонусу — стільки ж, скільки 20 вогнищ, тож вигідно цілитись точно. Найбільший бонус — 95 × 100 = 9500.
 
 **Звук:** `HoseStream` — луп, поки тече вода; `HoseSplash` — бризки краплі (ліміт копій та інтервал — у `SoundLibrary`); згасле вогнище шипить звуком `Explode`.
@@ -220,7 +221,7 @@
 ## 7. Очки і комбо
 
 - `PointsPerObstacle` (10) за кожну перешкоду, що вибухнула, включно з тими, що поза доріжкою.
-- **Комбо** = кількість перешкод, знищених одним пострілом. Від 3 штук — множник за таблицею з конфігу режиму (`Combo`). У Шлангу комбо немає (4.7):
+- **Комбо** = кількість перешкод, знищених одним пострілом. Від 3 штук — множник за таблицею з конфігу режиму (`Combo`). У Шлангу комбо за постріл немає, натомість є бонус за одночасне гасіння (4.7):
 
   | Перешкод за постріл | Множник |
   |---|---|
@@ -233,7 +234,7 @@
   - Чому 30: постріл заробляє приблизно 5–26 очок на кожен витрачений відсоток (від маленького пострілу в одну перешкоду до великого комбо ×3). Тож кожен збережений відсоток вартий більше, ніж витрачений на зайві перешкоди, і є сенс розчищати шлях економно.
 - У грі: «+10» над кожним вибухом, біля точки влучання — «КОМБО ×2». Звук комбо яскравішає з рівнем: `Combo` (3+), `ComboBig` (6+), `ComboHuge` (10+).
 - Угорі — індикатор залишку кулі, оновлюється після кожного пострілу. Загального лічильника очок у HUD немає.
-- Фінальний екран: анімований підрахунок «перешкоди → бонус комбо → бонус за кулю → разом». Бонус за кулю — окремий рядок. У режимі без комбо (Шланг) рядка комбо немає: `ScoreSummary.HasCombo`.
+- Фінальний екран: анімований підрахунок «перешкоди → бонус комбо → бонус за кулю → разом». Бонус за кулю — окремий рядок. У режимі без комбо й без бонусу за одночасне гасіння рядка комбо немає: `ScoreSummary.HasCombo`. Бонус Шланга йде в цей самий рядок.
 - Очки нараховуються в загальний рахунок і при перемозі, і при програші.
 - Загальний рахунок зберігається в PlayerPrefs окремо для кожного режиму і показується в меню на кнопці свого режиму.
 
@@ -290,7 +291,7 @@ Loading → Menu → Game → Final ─┬─ «В меню»          → Menu
 Boot (завантажена весь час)
 └─ Bootstrap
    ├─ сервіси застосунку: SceneLoader, LoadingCurtain, SaveService,
-   │  InputService, VibrationService, AudioService
+   │  InputService, VibrationService, AudioService, BonusService (бонуси режимів з ModeConfigs)
    ├─ конфіги: SettingsConfig (спільне), ModeConfigs (конфіг кожного режиму)
    └─ AppStateMachine: Loading → Menu → Game → Final → Menu | Game
 
@@ -357,7 +358,7 @@ ShowComboIfAny(_score.AddShot(destroyed));
 
 1. `HoseAim` читає палець, як Рогатка (`SlingshotPull.TryAim`). Рахується лише дотик, зроблений під час ходу.
 2. Поки палець за мертвою зоною і кулі є що лити, `HoseStream.Pour` відкриває кран: `HoseFlow` зливає кулю (`_ball.Spend` щокадру) і відмірює краплі, а `HoseDrops` запускає їх по дузі `LobTargeting`. `HosePreview` показує дугу і через `ArcProbe` + `TargetHighlight` підсвічує вогнища, які загасить удар.
-3. `HoseDrops.Tick` рухає кожну краплю вздовж її дуги й проганяє пройдений відрізок через `IObstacleSweep` (`PathScanner`). Удари йдуть у `DropSplash`: вогнища в радіусі бризок отримують по влучанню (`HitCounter`). Згасле вогнище одразу починає осідати (`Obstacle.ExplodeAsync` вимикає колайдер синхронно, тож наступна крапля того ж кадру його не зачепить), дає «+10» і просить перевірити доріжку.
+3. `HoseDrops.Tick` рухає кожну краплю вздовж її дуги й проганяє пройдений відрізок через `IObstacleSweep` (`PathScanner`). Удари йдуть у `DropSplash`: вогнища в радіусі бризок отримують по влучанню (`HitCounter`). Згасле вогнище одразу починає осідати (`Obstacle.ExplodeAsync` вимикає колайдер синхронно, тож наступна крапля того ж кадру його не зачепить), дає «+10», додається до серії `ExtinguishBurst` і просить перевірити доріжку. На початку кожного кадру серія, вікно якої минуло, закривається; якщо вона досягла порогу, `ScoreCounter.AddExtinguishBonus` нараховує бонус. Пороги й вікно `ExtinguishBurst` бере з `IBonusService`, а той — з конфігу режиму через `ModeConfigs`.
 4. Хід закінчується, коли доріжка вільна або вода скінчилася, усі краплі впали, а вогнища осіли. Далі `GameLoop` сам вирішує перемогу чи поразку.
 
 ### 10.5 Структура
@@ -384,14 +385,14 @@ Assets/Project/
       Feedback/      DangerFeedback
       Finish/        HopPath, WinSequence
       Hose/          HoseStrategy, HoseAim, HoseStream, HoseFlow, HoseDrops, WaterDrop, DropImpact, DropSize,
-                     DropSplash, HitCounter, ArcProbe, HosePreview
+                     DropSplash, HitCounter, ArcProbe, HosePreview, ExtinguishBurst
       Levels/        Level, LevelCatalog, LevelProgress, ModeLevels
       Modes/         GameMode, ModeConfigs
       Paths/         GroundPath, CatmullRomSpline
       Obstacles/     Obstacle, ObstacleCascade
       Rules/         RoundRules
       Scanning/      PathScanner, ObstacleScanner, PathCheck, IObstacleSweep
-      Score/         ScoreCounter, ShotScore, ScoreSummary
+      Score/         ScoreCounter, ShotScore, ScoreSummary, ComboSounds
       Shot/          ShotEconomy, ShotRequest, ShotMode, ShotTargeting, LobTargeting, ArcPath, FiredShot
       Strategies/    IShotStrategy, ReleasedShotStrategy, ShotStrategyFactory
       Presentation/  інтерфейси в'юшок, Null/
@@ -452,7 +453,8 @@ Assets/Project/
 Конфігів п'ять. `Configs/SettingsConfig.asset` — те, що спільне для всієї гри. У кожного режиму свій конфіг у `Configs/Modes/`, і в ньому лише ті розділи, якими режим користується: `ClassicModeConfig`, `SlingshotModeConfig`, `ArrowModeConfig`, `HoseModeConfig`.
 
 - Спільна база `ModeConfig` дає кожному режиму `Score`, `Feedback` і критичний розмір кулі.
-- Режими з пострілами (`ShotModeConfig`) додають `Shot`, `Infection` і `Combo`; критичний розмір у них — `Shot.MinShootPercent`. У Шланга пострілів немає, тож критичний розмір лежить у `Hose.CriticalPercent` і дорівнює `Shot.MinShootPercent` решти режимів; комбо немає.
+- Режими з пострілами (`ShotModeConfig`) додають `Shot`, `Infection` і `Combo`; критичний розмір у них — `Shot.MinShootPercent`. У Шланга пострілів немає, тож критичний розмір лежить у `Hose.CriticalPercent` і дорівнює `Shot.MinShootPercent` решти режимів; комбо немає, натомість Шланг додає `ExtinguishBonus`.
+- Бонуси режимів gameplay читає не з конфігу напряму, а через `IBonusService` (`BonusService` поверх `ModeConfigs`, створюється в `Bootstrap` і передається в `GameDependencies`). Режим без розділу бонусу (`ModeConfig.ExtinguishBonus` → `None`) бонусу не має.
 - `Bootstrap` бере всі чотири конфіги через `ModeConfigs`, який падає ще на старті, якщо в якогось режиму конфігу немає або їх два, або якщо критичні розміри режимів різні.
 - Класика, Рогатка й Стрілка після розділення мають ті самі значення, що й раніше.
 
@@ -464,6 +466,7 @@ Assets/Project/
 | `Slingshot` | — | ✓ | — | ✓ |
 | `Arrow` | — | — | ✓ | — |
 | `Hose` | — | — | — | ✓ |
+| `ExtinguishBonus` | — | — | — | ✓ |
 | `Score`, `Feedback` | ✓ | ✓ | ✓ | ✓ |
 
 «Дефолт» — значення в коді (ним заповнюється новий конфіг), «У грі» — що стоїть зараз в ассеті. Приклади в розділах 4–5 рахують з дефолтами.
@@ -527,6 +530,8 @@ Assets/Project/
 | `Hose.HitsToExtinguish` | 1 | 1 | скільки влучань треба вогнищу, щоб згаснути |
 | `Hose.MaxDropsInFlight` | 32 | 32 | найбільше крапель у повітрі; розмір пулу крапель і їхніх в'юшок |
 | `Hose.PreviewSegments` | 12 | 12 | на скільки відрізків прев'ю ділить дугу, щоб знайти, у що влучить наступна крапля |
+| `ExtinguishBonus.WindowMilliseconds` | 300 мс | 300 мс | вогнища, що згасли протягом цього часу від першого, рахуються як погашені одночасно |
+| `ExtinguishBonus.Tiers` | 2→×1.5, 3→×2, 5→×3 | так само | пороги і множники бонусу за одночасне гасіння |
 | `Lob.*` | як вище | як у Рогатці | дальність і висота дуги крапель |
 | `Slingshot.*` | як вище | як у Рогатці | мертва зона й повний тяг |
 | `Score.PointsPerObstacle` | 10 | 10 | очки за погашене вогнище |

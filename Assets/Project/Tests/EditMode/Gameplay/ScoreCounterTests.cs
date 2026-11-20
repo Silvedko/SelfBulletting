@@ -126,6 +126,32 @@ namespace SelfBulletting.Tests.Gameplay
         }
 
         [Test]
+        public void AddExtinguishBonus_AddsWhatTheMultiplierPutsOnTopOfTheBasePoints()
+        {
+            var counter = new ScoreCounter(new ScoreSettings(10, 100), ComboSettings.None, hasExtinguishBonus: true);
+            counter.AddObstacle();
+            counter.AddObstacle();
+            counter.AddObstacle();
+
+            int bonus = counter.AddExtinguishBonus(3, 2f);
+
+            Assert.AreEqual(30, bonus);
+            Assert.AreEqual(30, counter.Summary.BasePoints);
+            Assert.AreEqual(30, counter.Summary.ComboBonus);
+            Assert.AreEqual(60, counter.Summary.Total);
+        }
+
+        [Test]
+        public void Summary_ModeWithExtinguishBonus_KeepsTheComboLine()
+        {
+            var withBonus = new ScoreCounter(new ScoreSettings(10, 100), ComboSettings.None, hasExtinguishBonus: true);
+            var withoutBonus = new ScoreCounter(new ScoreSettings(10, 100), ComboSettings.None);
+
+            Assert.IsTrue(withBonus.Summary.HasCombo);
+            Assert.IsFalse(withoutBonus.Summary.HasCombo);
+        }
+
+        [Test]
         public void AwardHealthBonus_CalledAgain_ReplacesBonus()
         {
             _counter.AwardHealthBonus(25f);

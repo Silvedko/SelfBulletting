@@ -5,6 +5,7 @@ using SelfBulletting.Gameplay;
 using SelfBulletting.Gameplay.Levels;
 using SelfBulletting.Gameplay.Modes;
 using SelfBulletting.Infrastructure.Services.Audio;
+using SelfBulletting.Infrastructure.Services.Bonus;
 using SelfBulletting.Infrastructure.Services.Input;
 using SelfBulletting.Infrastructure.Services.Save;
 using SelfBulletting.Infrastructure.Services.SceneLoading;
@@ -54,9 +55,10 @@ namespace SelfBulletting.Infrastructure
             _audio = CreateAudioService();
             _vibration = CreateVibrationService();
 
-            var gameDependencies = new GameDependencies(_settings, input, _vibration, _audio);
-            var levels = new ModeLevels(_levelCatalog, _curvedLevelCatalog, saveService);
             var modes = new ModeConfigs(_modeConfigs);
+            IBonusService bonus = new BonusService(modes);
+            var gameDependencies = new GameDependencies(_settings, input, _vibration, _audio, bonus);
+            var levels = new ModeLevels(_levelCatalog, _curvedLevelCatalog, saveService);
 
             _stateMachine = new AppStateMachine();
             _stateMachine.Register(new LoadingState(_stateMachine, sceneLoader, _loadingCurtain, _settings.Loading));
