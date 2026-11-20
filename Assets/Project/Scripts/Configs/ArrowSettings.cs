@@ -10,14 +10,14 @@ namespace SelfBulletting.Configs
     [Serializable]
     public sealed class ArrowSettings
     {
-        [Tooltip("Middle of the sector, degrees of world yaw. 45° points from the bottom-left corner into the field.")]
-        [SerializeField, Range(-180f, 180f)] private float _sectorCenterDegrees = 45f;
+        [Tooltip("Middle of the sector, degrees of world yaw. 22.5° with the 135° width swings from 45° left of «up» to «right».")]
+        [SerializeField, Range(-180f, 180f)] private float _sectorCenterDegrees = 22.5f;
 
         [Tooltip("Width of the sector, degrees.")]
-        [SerializeField, Range(1f, 360f)] private float _sectorWidthDegrees = 90f;
+        [SerializeField, Range(1f, 360f)] private float _sectorWidthDegrees = 135f;
 
         [Tooltip("Seconds for the arrow to swing from one edge of the sector to the other.")]
-        [SerializeField, Min(0.1f)] private float _swingHalfPeriodSeconds = 1.2f;
+        [SerializeField, Min(0.1f)] private float _swingHalfPeriodSeconds = 1.8f;
 
         [Tooltip("Seconds for the landing point to run along the arrow from the shortest range to the longest.")]
         [SerializeField, Min(0.1f)] private float _rangeHalfPeriodSeconds = 1.5f;

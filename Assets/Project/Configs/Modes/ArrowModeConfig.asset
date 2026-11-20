@@ -44,9 +44,9 @@ MonoBehaviour:
     _apexHeightPerMeter: 0.25
     _minApexHeight: 1
   _arrow:
-    _sectorCenterDegrees: 45
-    _sectorWidthDegrees: 90
-    _swingHalfPeriodSeconds: 1.2
+    _sectorCenterDegrees: 22.5
+    _sectorWidthDegrees: 135
+    _swingHalfPeriodSeconds: 1.8
     _rangeHalfPeriodSeconds: 1.5
     _shotCostPercent: 15
     _damageRadiusPercent: 100
